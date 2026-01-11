@@ -13,18 +13,30 @@ export class Order {
   customerName: string;
 
   @Column()
-  email: string;
+  customerEmail: string;
 
   @Column()
-  phone: string;
+  customerPhone: string;
 
   @Column('text')
+  shippingAddress: string;
+
+  @Column({ nullable: true })
+  postalCode: string;
+
+  @Column({ nullable: true })
+  email: string;
+
+  @Column({ nullable: true })
+  phone: string;
+
+  @Column({ nullable: true })
   address: string;
 
-  @Column()
+  @Column({ nullable: true })
   city: string;
 
-  @Column()
+  @Column({ nullable: true })
   country: string;
 
   @Column('decimal', { precision: 10, scale: 2 })

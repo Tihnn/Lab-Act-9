@@ -1,5 +1,6 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import LandingPage from './pages/LandingPage';
 import ProductsPage from './pages/ProductsPage';
 import CartPage from './pages/CartPage';
 import CheckoutPage from './pages/CheckoutPage';
@@ -11,12 +12,31 @@ import AdminMyProductsPage from './pages/AdminMyProductsPage';
 import AdminOrdersPage from './pages/AdminOrdersPage';
 import ProfilePage from './pages/ProfilePage';
 
+// Component to handle admin home redirect
+function AdminHomeRedirect() {
+  React.useEffect(() => {
+    const userStr = localStorage.getItem('bikeshop_current_user_v1');
+    if (userStr) {
+      try {
+        const user = JSON.parse(userStr);
+        if (user.isAdmin) {
+          window.location.href = '/admin/dashboard';
+        }
+      } catch (e) {
+        // ignore
+      }
+    }
+  }, []);
+  return <LandingPage />;
+}
+
 function App() {
   return (
     <Router>
       <Routes>
         <Route path="/" element={<LoginPage />} />
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/home" element={<AdminHomeRedirect />} />
         <Route path="/products" element={<ProductsPage />} />
         <Route path="/cart" element={<CartPage />} />
         <Route path="/checkout" element={<CheckoutPage />} />

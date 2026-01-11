@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { getAllProducts, addToCart } from '../services/api';
+import axios from 'axios';
+import { addToCart } from '../services/api';
 import Toast from '../components/Toast';
 import './ProductsPage.css';
 
@@ -25,6 +26,20 @@ function ProductsPage() {
   const [toastPosition, setToastPosition] = useState('center');
 
   useEffect(() => {
+    // Redirect admin users to their dashboard
+    const userStr = localStorage.getItem('bikeshop_current_user_v1');
+    if (userStr) {
+      try {
+        const user = JSON.parse(userStr);
+        if (user.isAdmin) {
+          navigate('/admin/dashboard');
+          return;
+        }
+      } catch (e) {
+        // ignore
+      }
+    }
+    
     loadProducts();
     updateCartCount();
     // honor ?category= query from other pages
@@ -35,8 +50,8 @@ function ProductsPage() {
 
   const loadProducts = async () => {
     try {
-      const response = await getAllProducts();
-      setProducts(response.data);
+      const response = await axios.get('http://localhost:3001/api/products');
+      setProducts(response.data.data);
       setLoading(false);
     } catch (error) {
       console.error('Error loading products:', error);
@@ -44,10 +59,21 @@ function ProductsPage() {
     }
   };
 
-  const updateCartCount = () => {
-    const sessionId = 'default-session';
-    const cart = JSON.parse(localStorage.getItem(`cart_${sessionId}`) || '[]');
-    setCartCount(cart.length);
+  const updateCartCount = async () => {
+    try {
+      const userStr = localStorage.getItem('bikeshop_current_user_v1');
+      if (!userStr) {
+        setCartCount(0);
+        return;
+      }
+      const user = JSON.parse(userStr);
+      const response = await axios.get(`http://localhost:3001/api/cart/${user.id}`);
+      const items = response.data.data || [];
+      setCartCount(items.length);
+    } catch (error) {
+      console.error('Error fetching cart count:', error);
+      setCartCount(0);
+    }
   };
 
   const handleLogout = () => {
@@ -69,7 +95,7 @@ function ProductsPage() {
 
   const user = getUserInfo();
   const isAdmin = user?.isAdmin || false;
-  const userInitial = user?.firstName ? user.firstName.charAt(0).toUpperCase() : 'U';
+  const userInitial = user?.firstName ? user.firstName.charAt(0).toUpperCase() : '';
 
   const handleAddToCart = async (product, type) => {
     try {
@@ -113,7 +139,7 @@ function ProductsPage() {
       </div>
       <div className="product-info">
         <h3 className="product-name">{product.name}</h3>
-        <p className="product-description">{product.description}</p>
+        <p className="product-description">{product.description || 'No description'}</p>
         <div className="product-meta">
           {product.brand && <span className="product-brand">{product.brand}</span>}
           {product.category && <span className="product-category">{product.category}</span>}
@@ -180,14 +206,14 @@ function ProductsPage() {
       {/* Navigation */}
       <header className="navbar">
         <div className="navbar-container">
-          <div className="logo" onClick={() => navigate('/')}>
+          <div className="logo" onClick={() => navigate('/home')}>
             PedalHub
             {user && (
               <span className="logo-suffix"> / {isAdmin ? 'Admin' : (user.email || 'User')}</span>
             )}
           </div>
           <nav className="nav-links">
-            <button onClick={() => navigate('/')} className="home-btn">
+            <button onClick={() => navigate('/home')} className="home-btn">
               HOME
             </button>
 

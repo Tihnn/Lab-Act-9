@@ -181,6 +181,27 @@
 /* Order Items */
 .order-items-list {
   margin-top: 20px;
+  max-height: 300px;
+  overflow-y: auto;
+  padding-right: 10px;
+}
+
+.order-items-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.order-items-list::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.order-items-list::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 10px;
+}
+
+.order-items-list::-webkit-scrollbar-thumb:hover {
+  background: #555;
 }
 
 .order-item {

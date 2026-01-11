@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Body, Param, HttpException, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, HttpException, HttpStatus } from '@nestjs/common';
 import { OrdersService } from './orders.service';
 
 @Controller('api/orders')
@@ -50,6 +50,16 @@ export class OrdersController {
     try {
       const order = await this.ordersService.updateOrderStatus(orderId, data.status);
       return { success: true, data: order };
+    } catch (error) {
+      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+    }
+  }
+
+  @Delete(':orderId')
+  async deleteOrder(@Param('orderId') orderId: number) {
+    try {
+      await this.ordersService.deleteOrder(orderId);
+      return { success: true, message: 'Order deleted successfully' };
     } catch (error) {
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
     }

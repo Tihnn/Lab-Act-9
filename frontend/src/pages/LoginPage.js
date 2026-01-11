@@ -17,6 +17,9 @@ function LoginPage() {
     firstName: '',
     lastName: '',
     email: '',
+    phone: '',
+    address: '',
+    postalCode: '',
     password: '',
     confirmPassword: ''
   });
@@ -25,11 +28,36 @@ function LoginPage() {
     firstName: false,
     lastName: false,
     email: false,
+    phone: false,
+    address: false,
+    postalCode: false,
     password: false,
     confirmPassword: false
   });
   const [showRegisterPassword, setShowRegisterPassword] = useState(false);
   const [showRegisterConfirmPassword, setShowRegisterConfirmPassword] = useState(false);
+
+  const formatPhoneNumber = (value) => {
+    // Remove all non-digits
+    const digits = value.replace(/\D/g, '');
+    
+    // Ensure it starts with 63
+    let phoneDigits = digits;
+    if (!phoneDigits.startsWith('63')) {
+      phoneDigits = '63' + phoneDigits;
+    }
+    
+    // Format as 63+ xxx-xxx-xxxx
+    if (phoneDigits.length <= 2) {
+      return phoneDigits;
+    } else if (phoneDigits.length <= 5) {
+      return `${phoneDigits.slice(0, 2)}+ ${phoneDigits.slice(2)}`;
+    } else if (phoneDigits.length <= 8) {
+      return `${phoneDigits.slice(0, 2)}+ ${phoneDigits.slice(2, 5)}-${phoneDigits.slice(5)}`;
+    } else {
+      return `${phoneDigits.slice(0, 2)}+ ${phoneDigits.slice(2, 5)}-${phoneDigits.slice(5, 8)}-${phoneDigits.slice(8, 12)}`;
+    }
+  };
 
   const handleCategoryClick = () => {
     alert('Please login or register first to browse categories');
@@ -90,12 +118,15 @@ function LoginPage() {
       confirmPassword: false
     });
 
-    if (!registerData.firstName || !registerData.lastName || !registerData.email || !registerData.password) {
+    if (!registerData.firstName || !registerData.lastName || !registerData.email || !registerData.phone || !registerData.address || !registerData.postalCode || !registerData.password) {
       setRegisterAlert('Please fill in all fields');
       setRegisterErrors({
         firstName: !registerData.firstName,
         lastName: !registerData.lastName,
         email: !registerData.email,
+        phone: !registerData.phone,
+        address: !registerData.address,
+        postalCode: !registerData.postalCode,
         password: !registerData.password,
         confirmPassword: !registerData.confirmPassword
       });
@@ -104,8 +135,11 @@ function LoginPage() {
     }
 
     const emailVal = (registerData.email || '').trim().toLowerCase();
-    if (!emailVal.endsWith('@gmail.com')) {
-      setRegisterAlert('Email must be a @gmail.com address');
+    
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(emailVal)) {
+      setRegisterAlert('Please enter a valid email address');
       setRegisterErrors(prev => ({ ...prev, email: true }));
       clearAlertLater(setRegisterAlert, 4000);
       return;
@@ -132,6 +166,9 @@ function LoginPage() {
         password: registerData.password,
         firstName: registerData.firstName,
         lastName: registerData.lastName,
+        phone: registerData.phone.replace(/\D/g, ''),
+        address: registerData.address,
+        postalCode: registerData.postalCode,
         isAdmin: false
       });
 
@@ -269,18 +306,46 @@ function LoginPage() {
 
               <input
                 type="text"
-                placeholder="Enter your Email (must be @gmail.com)"
+                placeholder="Enter your Email"
                 className={`auth-input ${registerErrors.email ? 'error' : ''}`}
                 value={registerData.email}
                 onChange={(e) => {
                   setRegisterData({ ...registerData, email: e.target.value });
                   setRegisterErrors(prev => ({ ...prev, email: false }));
                 }}
-                onBlur={(e) => {
-                  const val = (e.target.value || '').trim();
-                  if (val && !val.includes('@')) {
-                    setRegisterData(prev => ({ ...prev, email: val + '@gmail.com' }));
-                  }
+              />
+
+              <input
+                type="tel"
+                placeholder="63+ xxx-xxx-xxxx"
+                className={`auth-input ${registerErrors.phone ? 'error' : ''}`}
+                value={registerData.phone}
+                onChange={(e) => {
+                  const formatted = formatPhoneNumber(e.target.value);
+                  setRegisterData({ ...registerData, phone: formatted });
+                  setRegisterErrors(prev => ({ ...prev, phone: false }));
+                }}
+              />
+
+              <input
+                type="text"
+                placeholder="Address (e.g., 123 Main St, City, State)"
+                className={`auth-input ${registerErrors.address ? 'error' : ''}`}
+                value={registerData.address}
+                onChange={(e) => {
+                  setRegisterData({ ...registerData, address: e.target.value });
+                  setRegisterErrors(prev => ({ ...prev, address: false }));
+                }}
+              />
+
+              <input
+                type="text"
+                placeholder="Postal code"
+                className={`auth-input ${registerErrors.postalCode ? 'error' : ''}`}
+                value={registerData.postalCode}
+                onChange={(e) => {
+                  setRegisterData({ ...registerData, postalCode: e.target.value });
+                  setRegisterErrors(prev => ({ ...prev, postalCode: false }));
                 }}
               />
 

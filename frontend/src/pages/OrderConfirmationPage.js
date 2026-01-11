@@ -33,7 +33,7 @@ function OrderConfirmationPage() {
       <div className="confirmation-page">
         <div className="error-message">
           <h2>Order not found</h2>
-          <button onClick={() => navigate('/')}>Return to Home</button>
+          <button onClick={() => navigate('/home')}>Return to Home</button>
         </div>
       </div>
     );
@@ -44,7 +44,7 @@ function OrderConfirmationPage() {
       {/* Navigation */}
       <header className="navbar">
         <div className="navbar-container">
-          <div className="logo" onClick={() => navigate('/')}>
+          <div className="logo" onClick={() => navigate('/home')}>
             PedalHub
             {(() => {
               const userStr = localStorage.getItem('bikeshop_current_user_v1');

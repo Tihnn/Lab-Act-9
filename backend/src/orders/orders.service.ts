@@ -16,13 +16,12 @@ export class OrdersService {
     const order = this.orderRepository.create({
       userId: orderData.userId,
       customerName: orderData.customerName,
-      email: orderData.email,
-      phone: orderData.phone,
-      address: orderData.address,
-      city: orderData.city,
-      country: orderData.country,
+      customerEmail: orderData.customerEmail,
+      customerPhone: orderData.customerPhone,
+      shippingAddress: orderData.shippingAddress,
+      postalCode: orderData.postalCode,
       totalAmount: orderData.totalAmount,
-      paymentMethod: orderData.paymentMethod,
+      paymentMethod: orderData.paymentMethod || 'Cash on Delivery',
       status: 'pending',
     });
 
@@ -77,5 +76,12 @@ export class OrdersService {
       where: { id: orderId },
       relations: ['items'],
     });
+  }
+
+  async deleteOrder(orderId: number) {
+    // First delete order items
+    await this.orderItemRepository.delete({ orderId });
+    // Then delete the order
+    await this.orderRepository.delete(orderId);
   }
 }

@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import './AdminDashboardPage.css';
 
 function AdminDashboardPage() {
   const navigate = useNavigate();
   const [stats, setStats] = useState({
     totalSold: 0,
-    totalOrders: 0,
+    totalPendingOrders: 0,
+    totalCancelledOrders: 0,
     totalProducts: 0
   });
   const [recentOrders, setRecentOrders] = useState([]);
@@ -33,43 +35,59 @@ function AdminDashboardPage() {
     loadStats();
   }, [navigate]);
 
-  const loadStats = () => {
-    // Get all orders
-    const orders = JSON.parse(localStorage.getItem('bikeshop_orders') || '[]');
-    
-    // Get all products
-    const products = JSON.parse(localStorage.getItem('bikeshop_products') || '{"bicycles":[],"parts":[],"accessories":[],"clothing":[]}');
-    const totalProducts = products.bicycles.length + products.parts.length + products.accessories.length + products.clothing.length;
-    
-    // Calculate total sold products (sum of all order items)
-    let totalSold = 0;
-    orders.forEach(order => {
-      if (order.items && Array.isArray(order.items)) {
-        order.items.forEach(item => {
-          totalSold += item.quantity || 0;
-        });
-      }
-    });
-    
-    setStats({
-      totalSold,
-      totalOrders: orders.length,
-      totalProducts
-    });
+  const loadStats = async () => {
+    try {
+      // Get all orders from API
+      const ordersResponse = await axios.get('http://localhost:3001/api/orders');
+      const orders = ordersResponse.data.data || [];
+      
+      // Filter only delivered orders
+      const deliveredOrders = orders.filter(order => order.status === 'delivered');
+      
+      // Filter pending orders
+      const pendingOrders = orders.filter(order => order.status === 'pending');
+      
+      // Filter cancelled orders
+      const cancelledOrders = orders.filter(order => order.status === 'cancelled');
+      
+      // Get all products from API
+      const productsResponse = await axios.get('http://localhost:3001/api/products');
+      const products = productsResponse.data.data;
+      const totalProducts = products.bicycles.length + products.parts.length + products.accessories.length + products.clothing.length;
+      
+      // Calculate total sold products from delivered orders only
+      let totalSold = 0;
+      deliveredOrders.forEach(order => {
+        if (order.items && Array.isArray(order.items)) {
+          order.items.forEach(item => {
+            totalSold += item.quantity || 0;
+          });
+        }
+      });
+      
+      setStats({
+        totalSold,
+        totalPendingOrders: pendingOrders.length,
+        totalCancelledOrders: cancelledOrders.length,
+        totalProducts
+      });
 
-    // Get recent orders (last 5)
-    const recent = orders
-      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-      .slice(0, 5)
-      .map(order => ({
-        id: order.id,
-        customerName: order.customerName,
-        createdAt: order.createdAt,
-        status: order.status || 'pending',
-        totalAmount: order.totalAmount
-      }));
-    
-    setRecentOrders(recent);
+      // Get recent orders (last 5)
+      const recent = orders
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+        .slice(0, 5)
+        .map(order => ({
+          id: order.id,
+          customerName: order.customerName,
+          createdAt: order.createdAt,
+          status: order.status || 'pending',
+          totalAmount: order.totalAmount
+        }));
+      
+      setRecentOrders(recent);
+    } catch (error) {
+      console.error('Error loading dashboard stats:', error);
+    }
   };
 
   const handleLogout = () => {
@@ -90,7 +108,7 @@ function AdminDashboardPage() {
   };
 
   const user = getUserInfo();
-  const userInitial = user?.firstName ? user.firstName.charAt(0).toUpperCase() : 'A';
+  const userInitial = user?.firstName ? user.firstName.charAt(0).toUpperCase() : '';
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -146,8 +164,20 @@ function AdminDashboardPage() {
               </svg>
             </div>
             <div className="stat-content">
-              <h3>{stats.totalOrders}</h3>
-              <p>Total Orders</p>
+              <h3>{stats.totalPendingOrders}</h3>
+              <p>Total Pending Orders</p>
+            </div>
+          </div>
+
+          <div className="stat-card">
+            <div className="stat-icon" style={{ background: 'linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%)' }}>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+              </svg>
+            </div>
+            <div className="stat-content">
+              <h3>{stats.totalCancelledOrders}</h3>
+              <p>Cancelled Orders</p>
             </div>
           </div>
 
@@ -189,7 +219,7 @@ function AdminDashboardPage() {
                       <td>#{order.id}</td>
                       <td>{order.customerName}</td>
                       <td>{formatDate(order.createdAt)}</td>
-                      <td>₱{(order.totalAmount || 0).toFixed(2)}</td>
+                      <td>₱{(parseFloat(order.totalAmount) || 0).toFixed(2)}</td>
                       <td>
                         <span className={`status-badge status-${order.status}`}>
                           {order.status.charAt(0).toUpperCase() + order.status.slice(1)}

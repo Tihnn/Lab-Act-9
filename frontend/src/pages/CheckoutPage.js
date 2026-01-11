@@ -8,15 +8,59 @@ function CheckoutPage() {
   const [cartItems, setCartItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [isEditingShipping, setIsEditingShipping] = useState(false);
   const [formData, setFormData] = useState({
     customerName: '',
     customerEmail: '',
     customerPhone: '',
     shippingAddress: '',
+    postalCode: '',
   });
+
+  const formatPhoneNumber = (value) => {
+    // Remove all non-digits
+    const digits = value.replace(/\D/g, '');
+    
+    // Ensure it starts with 63
+    let phoneDigits = digits;
+    if (!phoneDigits.startsWith('63')) {
+      phoneDigits = '63' + phoneDigits;
+    }
+    
+    // Format as 63+ xxx-xxx-xxxx
+    if (phoneDigits.length <= 2) {
+      return phoneDigits;
+    } else if (phoneDigits.length <= 5) {
+      return `${phoneDigits.slice(0, 2)}+ ${phoneDigits.slice(2)}`;
+    } else if (phoneDigits.length <= 8) {
+      return `${phoneDigits.slice(0, 2)}+ ${phoneDigits.slice(2, 5)}-${phoneDigits.slice(5)}`;
+    } else {
+      return `${phoneDigits.slice(0, 2)}+ ${phoneDigits.slice(2, 5)}-${phoneDigits.slice(5, 8)}-${phoneDigits.slice(8, 12)}`;
+    }
+  };
+
+  const stripPhoneFormatting = (phone) => {
+    return phone.replace(/\D/g, '');
+  };
 
   useEffect(() => {
     loadCart();
+    // Auto-fill form with user data
+    const userStr = localStorage.getItem('bikeshop_current_user_v1');
+    if (userStr) {
+      try {
+        const user = JSON.parse(userStr);
+        setFormData({
+          customerName: `${user.firstName || ''} ${user.lastName || ''}`.trim(),
+          customerEmail: user.email || '',
+          customerPhone: user.phone ? formatPhoneNumber(user.phone) : '',
+          shippingAddress: user.address || '',
+          postalCode: user.postalCode || '',
+        });
+      } catch (error) {
+        console.error('Error parsing user data:', error);
+      }
+    }
   }, []);
 
   const loadCart = async () => {
@@ -31,9 +75,11 @@ function CheckoutPage() {
   };
 
   const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    const newValue = name === 'customerPhone' ? formatPhoneNumber(value) : value;
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value,
+      [name]: newValue,
     });
   };
 
@@ -54,12 +100,17 @@ function CheckoutPage() {
     setSubmitting(true);
     
     try {
+      const total = calculateTotal();
       const orderData = {
         ...formData,
+        totalAmount: total,
         items: cartItems.map(item => ({
           productType: item.productType,
           productId: item.productId,
+          productName: item.productName,
+          price: item.price,
           quantity: item.quantity,
+          imageUrl: item.imageUrl,
         })),
       };
 
@@ -92,7 +143,7 @@ function CheckoutPage() {
 
   const user = getUserInfo();
   const isAdmin = user?.isAdmin || false;
-  const userInitial = user?.firstName ? user.firstName.charAt(0).toUpperCase() : 'U';
+  const userInitial = user?.firstName ? user.firstName.charAt(0).toUpperCase() : '';
 
   if (loading) {
     return <div className="checkout-page"><div className="loading">Loading...</div></div>;
@@ -103,14 +154,14 @@ function CheckoutPage() {
       {/* Navigation */}
       <header className="navbar">
         <div className="navbar-container">
-          <div className="logo" onClick={() => navigate('/')}>
+          <div className="logo" onClick={() => navigate('/home')}>
             PedalHub
             {user && (
               <span className="logo-suffix"> / {isAdmin ? 'Admin' : (user.email || 'User')}</span>
             )}
           </div>
           <nav className="nav-links">
-            <button onClick={() => navigate('/')}>HOME</button>
+            <button onClick={() => navigate('/home')}>HOME</button>
             <button onClick={() => navigate('/cart')}>BACK TO CART</button>
           </nav>
           <div className="nav-actions">
@@ -130,7 +181,16 @@ function CheckoutPage() {
           {/* Checkout Form */}
           <div className="checkout-form-section">
             <form onSubmit={handleSubmit} className="checkout-form">
-              <h2>Shipping Information</h2>
+              <div className="section-header">
+                <h2>Shipping Information</h2>
+                <button
+                  type="button"
+                  className="edit-shipping-btn"
+                  onClick={() => setIsEditingShipping(!isEditingShipping)}
+                >
+                  {isEditingShipping ? 'Cancel Edit' : 'Edit Info'}
+                </button>
+              </div>
               
               <div className="form-group">
                 <label>Full Name *</label>
@@ -141,6 +201,7 @@ function CheckoutPage() {
                   onChange={handleInputChange}
                   required
                   placeholder="John Doe"
+                  disabled={!isEditingShipping}
                 />
               </div>
 
@@ -153,6 +214,7 @@ function CheckoutPage() {
                   onChange={handleInputChange}
                   required
                   placeholder="john@example.com"
+                  disabled={!isEditingShipping}
                 />
               </div>
 
@@ -164,7 +226,8 @@ function CheckoutPage() {
                   value={formData.customerPhone}
                   onChange={handleInputChange}
                   required
-                  placeholder="+1 234 567 8900"
+                  placeholder="63+ xxx-xxx-xxxx"
+                  disabled={!isEditingShipping}
                 />
               </div>
 
@@ -176,7 +239,21 @@ function CheckoutPage() {
                   onChange={handleInputChange}
                   required
                   rows="4"
-                  placeholder="123 Main St, City, State, ZIP"
+                  placeholder="123 Main St, City, State"
+                  disabled={!isEditingShipping}
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Postal Code *</label>
+                <input
+                  type="text"
+                  name="postalCode"
+                  value={formData.postalCode}
+                  onChange={handleInputChange}
+                  required
+                  placeholder="12345"
+                  disabled={!isEditingShipping}
                 />
               </div>
 

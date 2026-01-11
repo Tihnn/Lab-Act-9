@@ -8,7 +8,7 @@ export class Bicycle {
   @Column()
   name: string;
 
-  @Column('text')
+  @Column('text', { nullable: true })
   description: string;
 
   @Column('decimal', { precision: 10, scale: 2 })
@@ -23,7 +23,7 @@ export class Bicycle {
   @Column({ default: 0 })
   stock: number;
 
-  @Column({ nullable: true })
+  @Column('longtext', { nullable: true })
   imageUrl: string;
 
   @CreateDateColumn()
@@ -41,7 +41,7 @@ export class Part {
   @Column()
   name: string;
 
-  @Column('text')
+  @Column('text', { nullable: true })
   description: string;
 
   @Column('decimal', { precision: 10, scale: 2 })
@@ -56,7 +56,7 @@ export class Part {
   @Column({ default: 0 })
   stock: number;
 
-  @Column({ nullable: true })
+  @Column('longtext', { nullable: true })
   imageUrl: string;
 
   @CreateDateColumn()
@@ -74,7 +74,7 @@ export class Accessory {
   @Column()
   name: string;
 
-  @Column('text')
+  @Column('text', { nullable: true })
   description: string;
 
   @Column('decimal', { precision: 10, scale: 2 })
@@ -89,7 +89,7 @@ export class Accessory {
   @Column({ default: 0 })
   stock: number;
 
-  @Column({ nullable: true })
+  @Column('longtext', { nullable: true })
   imageUrl: string;
 
   @CreateDateColumn()
@@ -107,7 +107,7 @@ export class Clothing {
   @Column()
   name: string;
 
-  @Column('text')
+  @Column('text', { nullable: true })
   description: string;
 
   @Column('decimal', { precision: 10, scale: 2 })
@@ -122,7 +122,7 @@ export class Clothing {
   @Column({ default: 0 })
   stock: number;
 
-  @Column({ nullable: true })
+  @Column('longtext', { nullable: true })
   imageUrl: string;
 
   @CreateDateColumn()
@@ -131,3 +131,4 @@ export class Clothing {
   @UpdateDateColumn()
   updatedAt: Date;
 }
+

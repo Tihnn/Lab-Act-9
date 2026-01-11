@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import './LandingPage.css';
 
 function LandingPage() {
@@ -12,10 +13,21 @@ function LandingPage() {
     updateCartCount();
   }, []);
 
-  const updateCartCount = () => {
-    const sessionId = 'default-session';
-    const cart = JSON.parse(localStorage.getItem(`cart_${sessionId}`) || '[]');
-    setCartCount(cart.length);
+  const updateCartCount = async () => {
+    try {
+      const userStr = localStorage.getItem('bikeshop_current_user_v1');
+      if (!userStr) {
+        setCartCount(0);
+        return;
+      }
+      const user = JSON.parse(userStr);
+      const response = await axios.get(`http://localhost:3001/api/cart/${user.id}`);
+      const items = response.data.data || [];
+      setCartCount(items.length);
+    } catch (error) {
+      console.error('Error fetching cart count:', error);
+      setCartCount(0);
+    }
   };
 
   const handleStartBrowse = () => {
@@ -58,14 +70,14 @@ function LandingPage() {
   const user = getUserInfo();
   const isLoggedIn = !!user;
   const isAdmin = user?.isAdmin || false;
-  const userInitial = user?.firstName ? user.firstName.charAt(0).toUpperCase() : 'U';
+  const userInitial = user?.firstName ? user.firstName.charAt(0).toUpperCase() : '';
 
   return (
     <div className="landing-page">
       {/* Navigation Header */}
       <header className="navbar">
         <div className="navbar-container">
-          <div className="logo" onClick={() => navigate('/')}>
+          <div className="logo" onClick={() => navigate('/home')}>
             PedalHub
             {isLoggedIn && (
               <span className="logo-suffix"> / {isAdmin ? 'Admin' : (user?.email || 'User')}</span>

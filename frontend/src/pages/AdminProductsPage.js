@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import './AdminProductsPage.css';
 import Toast from '../components/Toast';
 
@@ -16,6 +17,7 @@ function AdminProductsPage() {
     brand: ''
   });
   const [imagePreview, setImagePreview] = useState('');
+  const [imageFile, setImageFile] = useState(null);
   const [errors, setErrors] = useState({});
   
   const [toastTitle, setToastTitle] = useState('');
@@ -91,15 +93,20 @@ function AdminProductsPage() {
   };
 
   const user = getUserInfo();
-  const userInitial = user?.firstName ? user.firstName.charAt(0).toUpperCase() : 'A';
+  const userInitial = user?.firstName ? user.firstName.charAt(0).toUpperCase() : '';
 
   const validateForm = () => {
     const newErrors = {};
 
     // Required fields
     if (!formData.name.trim()) newErrors.name = 'Product name is required';
-    if (!formData.description.trim()) newErrors.description = 'Description is required';
+    // Description is now optional
     if (!formData.brand.trim()) newErrors.brand = 'Brand is required';
+
+    // Image validation - required for new products only
+    if (!isEditMode && !imageFile && !imagePreview) {
+      newErrors.image = 'Product image is required';
+    }
 
     // Price validation
     const price = parseFloat(formData.price);
@@ -131,7 +138,7 @@ function AdminProductsPage() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
     if (!validateForm()) {
@@ -140,53 +147,34 @@ function AdminProductsPage() {
     }
 
     try {
-      const categoryKey = productType === 'bicycle' ? 'bicycles' : 
-                         productType === 'part' ? 'parts' :
-                         productType === 'accessory' ? 'accessories' : 'clothing';
-      
-      // Get existing products from localStorage
-      const allProducts = JSON.parse(localStorage.getItem('bikeshop_products') || '{"bicycles":[],"parts":[],"accessories":[],"clothing":[]}');
+      const productData = {
+        name: formData.name,
+        description: formData.description || '',
+        price: parseFloat(formData.price),
+        stock: parseInt(formData.stock),
+        brand: formData.brand,
+        category: productType,
+        imageUrl: imagePreview || ''
+      };
       
       if (isEditMode && editProductId) {
-        // Edit existing product
-        const productIndex = allProducts[categoryKey].findIndex(p => p.id === editProductId);
-        if (productIndex !== -1) {
-          allProducts[categoryKey][productIndex] = {
-            ...allProducts[categoryKey][productIndex],
-            name: formData.name,
-            description: formData.description,
-            price: parseFloat(formData.price),
-            stock: parseInt(formData.stock),
-            brand: formData.brand,
-            imageUrl: imagePreview || allProducts[categoryKey][productIndex].imageUrl
-          };
-          
-          localStorage.setItem('bikeshop_products', JSON.stringify(allProducts));
-          setToastType('success');
-          setToastIcon('check');
-          setToastTitle('Your product is successfully updated');
-          setToastSubtitle('');
-          setToastPosition('center');
-        }
+        // Edit existing product via API
+        await axios.put(`http://localhost:3001/api/products/${productType}/${editProductId}`, productData);
+        
+        setToastType('success');
+        setToastIcon('check');
+        setToastTitle('Your product is successfully updated');
+        setToastSubtitle('');
+        setToastPosition('center');
       } else {
-        // Add new product
-        const payload = {
-          id: Date.now(), // Generate unique ID
-          name: formData.name,
-          description: formData.description,
-          price: parseFloat(formData.price),
-          stock: parseInt(formData.stock),
-          brand: formData.brand,
-          imageUrl: imagePreview || undefined
-        };
-
-    allProducts[categoryKey].push(payload);
-    localStorage.setItem('bikeshop_products', JSON.stringify(allProducts));
-    setToastType('success');
-    setToastIcon('check');
-    setToastTitle(`${formData.name} added successfully!`);
-    setToastSubtitle('');
-    setToastPosition('center');
+        // Add new product via API
+        await axios.post(`http://localhost:3001/api/products/${productType}`, productData);
+        
+        setToastType('success');
+        setToastIcon('check');
+        setToastTitle(`${formData.name} added successfully!`);
+        setToastSubtitle('');
+        setToastPosition('center');
       }
       
       // Reset form
@@ -198,19 +186,20 @@ function AdminProductsPage() {
         brand: ''
       });
       setImagePreview('');
+      setImageFile(null);
       setErrors({});
       setIsEditMode(false);
       setEditProductId(null);
       
-      // Redirect to products page after short delay
+      // Redirect to My Products page after short delay
       setTimeout(() => {
-        navigate('/products');
+        navigate('/admin/products');
       }, 1000);
     } catch (error) {
       console.error('Error saving product:', error);
       setToastType('error');
       setToastIcon('error');
-      setToastTitle('Failed to save product: ' + error.message);
+      setToastTitle('Failed to save product: ' + (error.response?.data?.message || error.message));
       setToastPosition('center');
     }
   };
@@ -243,6 +232,14 @@ function AdminProductsPage() {
         setToastTitle('Image size should be less than 5MB');
         setToastPosition('center');
         return;
+      }
+      
+      // Store file reference
+      setImageFile(file);
+      
+      // Clear image error if it exists
+      if (errors.image) {
+        setErrors(prev => ({ ...prev, image: '' }));
       }
       
       // Create preview URL
@@ -391,87 +388,59 @@ function AdminProductsPage() {
                   accept="image/*"
                   onChange={handleImageChange}
                   style={{ padding: '8px' }}
+                  required={!isEditMode}
                 />
-                {imagePreview && (
-                  <div style={{ marginTop: '10px' }}>
-                    <img 
-                      src={imagePreview} 
-                      alt="Preview" 
-                      style={{ maxWidth: '200px', maxHeight: '200px', objectFit: 'cover', borderRadius: '8px' }}
-                    />
-                  </div>
-                )}
+                {errors.image && <span className="error">{errors.image}</span>}
               </div>
             )}
 
             {/* Parts specific fields */}
             {productType === 'part' && (
               <div className="form-group">
-                <label>Select Image</label>
+                <label>Select Image *</label>
                 <input
                   type="file"
                   accept="image/*"
                   onChange={handleImageChange}
                   style={{ padding: '8px' }}
+                  required={!isEditMode}
                 />
-                {imagePreview && (
-                  <div style={{ marginTop: '10px' }}>
-                    <img 
-                      src={imagePreview} 
-                      alt="Preview" 
-                      style={{ maxWidth: '200px', maxHeight: '200px', objectFit: 'cover', borderRadius: '8px' }}
-                    />
-                  </div>
-                )}
+                {errors.image && <span className="error">{errors.image}</span>}
               </div>
             )}
 
             {/* Accessories specific fields */}
             {productType === 'accessory' && (
               <div className="form-group">
-                <label>Select Image</label>
+                <label>Select Image *</label>
                 <input
                   type="file"
                   accept="image/*"
                   onChange={handleImageChange}
                   style={{ padding: '8px' }}
+                  required={!isEditMode}
                 />
-                {imagePreview && (
-                  <div style={{ marginTop: '10px' }}>
-                    <img 
-                      src={imagePreview} 
-                      alt="Preview" 
-                      style={{ maxWidth: '200px', maxHeight: '200px', objectFit: 'cover', borderRadius: '8px' }}
-                    />
-                  </div>
-                )}
+                {errors.image && <span className="error">{errors.image}</span>}
               </div>
             )}
 
             {/* Clothing specific fields */}
             {productType === 'clothing' && (
               <div className="form-group">
-                <label>Select Image</label>
+                <label>Select Image *</label>
                 <input
                   type="file"
                   accept="image/*"
                   onChange={handleImageChange}
                   style={{ padding: '8px' }}
+                  required={!isEditMode}
                 />
-                {imagePreview && (
-                  <div style={{ marginTop: '10px' }}>
-                    <img 
-                      src={imagePreview} 
-                      alt="Preview" 
-                      style={{ maxWidth: '200px', maxHeight: '200px', objectFit: 'cover', borderRadius: '8px' }}
-                    />
-                  </div>
-                )}
+                {errors.image && <span className="error">{errors.image}</span>}
               </div>
             )}
 
             <div className="form-actions">
-              <button type="button" className="btn-cancel" onClick={() => navigate('/products')}>
+              <button type="button" className="btn-cancel" onClick={() => navigate('/admin/products')}>
                 Cancel
               </button>
               <button type="submit" className="btn-submit">

@@ -24,7 +24,7 @@ export class CartItem {
   @Column({ default: 1 })
   quantity: number;
 
-  @Column({ nullable: true })
+  @Column('longtext', { nullable: true })
   imageUrl: string;
 
   @CreateDateColumn()

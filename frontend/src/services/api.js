@@ -60,168 +60,120 @@ export const getClothing = () => {
   });
 };
 
-// Cart API - Using localStorage
-export const getCart = (sessionId = 'default-session') => {
-  return new Promise((resolve) => {
-    const cart = JSON.parse(localStorage.getItem(`cart_${sessionId}`) || '[]');
-    resolve({ data: cart });
-  });
-};
-
-export const addToCart = (productType, productId, quantity, sessionId = 'default-session') => {
-  return new Promise((resolve, reject) => {
-    try {
-      const cart = JSON.parse(localStorage.getItem(`cart_${sessionId}`) || '[]');
-      
-      // Get all products
-      const allProducts = JSON.parse(
-        localStorage.getItem('bikeshop_products') || 
-        '{"bicycles":[],"parts":[],"accessories":[],"clothing":[]}'
-      );
-      
-      // Find the product
-      let product = null;
-      const categoryMap = {
-        'bicycle': 'bicycles',
-        'part': 'parts',
-        'accessory': 'accessories',
-        'clothing': 'clothing'
-      };
-      
-      const category = categoryMap[productType];
-      if (category) {
-        product = allProducts[category].find(p => p.id === productId);
-      }
-      
-      if (!product) {
-        reject({ response: { data: { message: 'Product not found' } } });
-        return;
-      }
-      
-      // Check if product already in cart
-      const existingItemIndex = cart.findIndex(
-        item => item.productId === productId && item.productType === productType
-      );
-      
-      if (existingItemIndex >= 0) {
-        // Update quantity
-        cart[existingItemIndex].quantity += quantity;
-      } else {
-        // Add new item
-        cart.push({
-          id: Date.now(),
-          productType,
-          productId,
-          quantity,
-          product
-        });
-      }
-      
-      localStorage.setItem(`cart_${sessionId}`, JSON.stringify(cart));
-      resolve({ data: cart });
-    } catch (error) {
-      reject(error);
-    }
-  });
-};
-
-export const updateCartItem = (id, quantity) => {
-  return new Promise((resolve, reject) => {
-    try {
-      const sessionId = 'default-session';
-      const cart = JSON.parse(localStorage.getItem(`cart_${sessionId}`) || '[]');
-      const itemIndex = cart.findIndex(item => item.id === id);
-      
-      if (itemIndex >= 0) {
-        cart[itemIndex].quantity = quantity;
-        localStorage.setItem(`cart_${sessionId}`, JSON.stringify(cart));
-        resolve({ data: cart[itemIndex] });
-      } else {
-        reject({ response: { data: { message: 'Item not found' } } });
-      }
-    } catch (error) {
-      reject(error);
-    }
-  });
-};
-
-export const removeFromCart = (id) => {
-  return new Promise((resolve) => {
-    const sessionId = 'default-session';
-    const cart = JSON.parse(localStorage.getItem(`cart_${sessionId}`) || '[]');
-    const updatedCart = cart.filter(item => item.id !== id);
-    localStorage.setItem(`cart_${sessionId}`, JSON.stringify(updatedCart));
-    resolve({ data: { message: 'Item removed' } });
-  });
-};
-
-export const clearCart = (sessionId = 'default-session') => {
-  return new Promise((resolve) => {
-    localStorage.setItem(`cart_${sessionId}`, '[]');
-    resolve({ data: { message: 'Cart cleared' } });
-  });
-};
-
-// Orders API - Using localStorage
-export const createOrder = (orderData) => {
-  return new Promise((resolve) => {
-    // Persist the order and decrement product stock in bikeshop_products
-    const orders = JSON.parse(localStorage.getItem('bikeshop_orders') || '[]');
-
-    // Load existing products
-    const allProducts = JSON.parse(
-      localStorage.getItem('bikeshop_products') ||
-      '{"bicycles":[],"parts":[],"accessories":[],"clothing":[]}'
-    );
-
-    // If orderData contains items, decrement stock for each
-    if (Array.isArray(orderData.items)) {
-      const categoryMap = {
-        'bicycle': 'bicycles',
-        'part': 'parts',
-        'accessory': 'accessories',
-        'clothing': 'clothing'
-      };
-
-      orderData.items.forEach(item => {
-        const category = categoryMap[item.productType];
-        if (!category) return;
-        const productIndex = allProducts[category].findIndex(p => p.id === item.productId);
-        if (productIndex >= 0) {
-          const existing = allProducts[category][productIndex];
-          const currentStock = parseInt(existing.stock || 0, 10) || 0;
-          const reduceBy = parseInt(item.quantity || 0, 10) || 0;
-          // decrement and clamp to zero
-          allProducts[category][productIndex].stock = Math.max(0, currentStock - reduceBy);
-        }
-      });
-
-      // Save updated products back to localStorage so admin sees the change
-      localStorage.setItem('bikeshop_products', JSON.stringify(allProducts));
-    }
-
-    const newOrder = {
-      ...orderData,
-      id: Date.now(),
-      createdAt: new Date().toISOString()
-    };
-
-    orders.push(newOrder);
-    localStorage.setItem('bikeshop_orders', JSON.stringify(orders));
-    resolve({ data: newOrder });
-  });
-};
-
-export const getOrderById = (id) => {
-  return new Promise((resolve, reject) => {
-    const orders = JSON.parse(localStorage.getItem('bikeshop_orders') || '[]');
-    const order = orders.find(o => o.id === parseInt(id));
-    if (order) {
-      resolve({ data: order });
+// Cart API - Using database
+export const getCart = async (userId) => {
+  // Get current user if userId not provided
+  if (!userId) {
+    const userStr = localStorage.getItem('bikeshop_current_user_v1');
+    if (userStr) {
+      const user = JSON.parse(userStr);
+      userId = user.id;
     } else {
-      reject({ response: { data: { message: 'Order not found' } } });
+      return { data: [] };
     }
-  });
+  }
+  
+  try {
+    const response = await api.get(`/api/cart/${userId}`);
+    // Backend returns { success: true, data: [...] }
+    return { data: response.data.data || [] };
+  } catch (error) {
+    console.error('Error fetching cart:', error);
+    return { data: [] };
+  }
+};
+
+export const addToCart = async (productType, productId, quantity) => {
+  // Get current user
+  const userStr = localStorage.getItem('bikeshop_current_user_v1');
+  if (!userStr) {
+    throw new Error('User not logged in');
+  }
+  
+  const user = JSON.parse(userStr);
+  
+  try {
+    const response = await api.post('/api/cart/add', {
+      userId: user.id,
+      productType,
+      productId,
+      quantity
+    });
+    // Backend returns { success: true, data: cartItem }
+    return { data: response.data.data };
+  } catch (error) {
+    console.error('Error adding to cart:', error);
+    throw error;
+  }
+};
+
+export const updateCartItem = async (id, quantity) => {
+  try {
+    const response = await api.put(`/api/cart/${id}`, { quantity });
+    // Backend returns { success: true, data: cartItem }
+    return { data: response.data.data };
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const removeFromCart = async (id) => {
+  try {
+    const response = await api.delete(`/api/cart/${id}`);
+    // Backend returns { success: true, data: result }
+    return { data: response.data.data };
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const clearCart = async (userId) => {
+  // Get current user if userId not provided
+  if (!userId) {
+    const userStr = localStorage.getItem('bikeshop_current_user_v1');
+    if (userStr) {
+      const user = JSON.parse(userStr);
+      userId = user.id;
+    }
+  }
+  
+  try {
+    const response = await api.delete(`/api/cart/clear/${userId}`);
+    // Backend returns { success: true, data: result }
+    return { data: response.data.data };
+  } catch (error) {
+    throw error;
+  }
+};
+
+// Orders API - Using database
+export const createOrder = async (orderData) => {
+  // Get current user
+  const userStr = localStorage.getItem('bikeshop_current_user_v1');
+  if (!userStr) {
+    throw new Error('User not logged in');
+  }
+  
+  const user = JSON.parse(userStr);
+  
+  try {
+    const response = await api.post('/api/orders', {
+      ...orderData,
+      userId: user.id
+    });
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const getOrderById = async (id) => {
+  try {
+    const response = await api.get(`/api/orders/${id}`);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
 };
 
 export default api;

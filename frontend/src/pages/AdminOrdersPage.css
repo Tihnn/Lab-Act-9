@@ -171,24 +171,56 @@
   text-transform: capitalize;
 }
 
+.status-select {
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  border: 2px solid;
+  cursor: pointer;
+  text-transform: capitalize;
+  transition: all 0.3s;
+  outline: none;
+}
+
+.status-select:hover {
+  opacity: 0.8;
+}
+
 .status-pending {
   background: #fff3cd;
   color: #856404;
-}
-
-.status-completed {
-  background: #d4edda;
-  color: #155724;
+  border-color: #856404;
 }
 
 .status-processing {
   background: #cce5ff;
   color: #004085;
+  border-color: #004085;
+}
+
+.status-shipped {
+  background: #e7d4f7;
+  color: #6a1b9a;
+  border-color: #6a1b9a;
+}
+
+.status-delivered {
+  background: #d4edda;
+  color: #155724;
+  border-color: #155724;
+}
+
+.status-completed {
+  background: #d4edda;
+  color: #155724;
+  border-color: #155724;
 }
 
 .status-cancelled {
   background: #f8d7da;
   color: #721c24;
+  border-color: #721c24;
 }
 
 .btn-view {
@@ -201,10 +233,27 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s;
+  margin-right: 8px;
 }
 
 .btn-view:hover {
   background: #bbdefb;
+}
+
+.btn-delete {
+  background: #ffebee;
+  color: #c62828;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.btn-delete:hover {
+  background: #ffcdd2;
 }
 
 .empty-state {

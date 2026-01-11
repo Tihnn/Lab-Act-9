@@ -7,6 +7,7 @@ import Toast from '../components/Toast';
 function CartPage() {
   const navigate = useNavigate();
   const [cartItems, setCartItems] = useState([]);
+  const [cartCount, setCartCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [toastTitle, setToastTitle] = useState('');
   const [toastSubtitle, setToastSubtitle] = useState('');
@@ -20,10 +21,15 @@ function CartPage() {
   const loadCart = async () => {
     try {
       const response = await getCart();
-      setCartItems(response.data);
+      // Ensure cartItems is always an array
+      const items = response.data || [];
+      setCartItems(Array.isArray(items) ? items : []);
+      setCartCount(items.length);
       setLoading(false);
     } catch (error) {
       console.error('Error loading cart:', error);
+      setCartItems([]);
+      setCartCount(0);
       setLoading(false);
     }
   };
@@ -33,11 +39,6 @@ function CartPage() {
     try {
       await updateCartItem(itemId, newQuantity);
       loadCart();
-      // show a quick confirmation
-      setToastType('success');
-      setToastIcon('check');
-      setToastTitle('Cart updated');
-      setToastSubtitle('Your cart has been updated');
     } catch (error) {
       console.error('Error updating cart:', error);
       setToastType('error');
@@ -66,7 +67,7 @@ function CartPage() {
 
   const calculateTotal = () => {
     return cartItems.reduce((total, item) => {
-      const price = item.product?.price || item.price || 0;
+      const price = item.price || 0;
       return total + (parseFloat(price) * item.quantity);
     }, 0);
   };
@@ -101,7 +102,7 @@ function CartPage() {
 
   const user = getUserInfo();
   const isAdmin = user?.isAdmin || false;
-  const userInitial = user?.firstName ? user.firstName.charAt(0).toUpperCase() : 'U';
+  const userInitial = user?.firstName ? user.firstName.charAt(0).toUpperCase() : '';
 
   if (loading) {
     return <div className="cart-page"><div className="loading">Loading cart...</div></div>;
@@ -112,15 +113,19 @@ function CartPage() {
       {/* Navigation */}
       <header className="navbar">
         <div className="navbar-container">
-          <div className="logo" onClick={() => navigate('/')}>
+          <div className="logo" onClick={() => navigate('/home')}>
             PedalHub
             {user && (
               <span className="logo-suffix"> / {isAdmin ? 'Admin' : (user.email || 'User')}</span>
             )}
           </div>
           <nav className="nav-links">
-            <button onClick={() => navigate('/')}>HOME</button>
+            <button onClick={() => navigate('/home')}>HOME</button>
             <button onClick={() => navigate('/products')}>CONTINUE SHOPPING</button>
+            <div className="cart-nav-button">
+              <button onClick={() => navigate('/cart')}>CART</button>
+              {cartCount > 0 && <span className="cart-badge">{cartCount}</span>}
+            </div>
           </nav>
           <div className="nav-actions">
             <button className="account-button" onClick={() => navigate('/profile', { state: { edit: true } })}>
@@ -146,10 +151,9 @@ function CartPage() {
           <div className="cart-content">
             <div className="cart-items">
               {cartItems.map(item => {
-                const product = item.product || {};
-                const productName = product.name || item.productName || 'Unknown Product';
-                const productImage = product.image || item.image || 'https://via.placeholder.com/100';
-                const productPrice = product.price || item.price || 0;
+                const productName = item.productName || 'Unknown Product';
+                const productImage = item.imageUrl || 'https://via.placeholder.com/100';
+                const productPrice = item.price || 0;
                 const productType = item.productType || 'Product';
                 
                 return (

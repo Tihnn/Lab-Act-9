@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import './AdminOrdersPage.css';
 
 function AdminOrdersPage() {
@@ -29,11 +30,17 @@ function AdminOrdersPage() {
     loadOrders();
   }, [navigate]);
 
-  const loadOrders = () => {
-    const allOrders = JSON.parse(localStorage.getItem('bikeshop_orders') || '[]');
-    // Sort by most recent first
-    const sorted = allOrders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-    setOrders(sorted);
+  const loadOrders = async () => {
+    try {
+      const response = await axios.get('http://localhost:3001/api/orders');
+      const allOrders = response.data.data || [];
+      // Sort by most recent first
+      const sorted = allOrders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      setOrders(sorted);
+    } catch (error) {
+      console.error('Error loading orders:', error);
+      setOrders([]);
+    }
   };
 
   const handleLogout = () => {
@@ -54,7 +61,7 @@ function AdminOrdersPage() {
   };
 
   const user = getUserInfo();
-  const userInitial = user?.firstName ? user.firstName.charAt(0).toUpperCase() : 'A';
+  const userInitial = user?.firstName ? user.firstName.charAt(0).toUpperCase() : '';
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -75,6 +82,43 @@ function AdminOrdersPage() {
   const closeModal = () => {
     setShowModal(false);
     setSelectedOrder(null);
+  };
+
+  const handleStatusChange = async (orderId, newStatus) => {
+    try {
+      await axios.put(`http://localhost:3001/api/orders/${orderId}/status`, {
+        status: newStatus
+      });
+      // Reload orders after status update
+      await loadOrders();
+      // Update selected order if modal is open
+      if (selectedOrder && selectedOrder.id === orderId) {
+        const response = await axios.get(`http://localhost:3001/api/orders/${orderId}`);
+        setSelectedOrder(response.data.data);
+      }
+    } catch (error) {
+      console.error('Error updating order status:', error);
+      alert('Failed to update order status');
+    }
+  };
+
+  const handleDeleteOrder = async (orderId) => {
+    if (!window.confirm('Are you sure you want to delete this order? This action cannot be undone.')) {
+      return;
+    }
+    try {
+      await axios.delete(`http://localhost:3001/api/orders/${orderId}`);
+      // Close modal if the deleted order was open
+      if (selectedOrder && selectedOrder.id === orderId) {
+        closeModal();
+      }
+      // Reload orders after deletion
+      await loadOrders();
+      alert('Order deleted successfully');
+    } catch (error) {
+      console.error('Error deleting order:', error);
+      alert('Failed to delete order');
+    }
   };
 
   return (
@@ -133,15 +177,26 @@ function AdminOrdersPage() {
                       <td>{order.customerEmail}</td>
                       <td>{order.customerPhone}</td>
                       <td>{formatDate(order.createdAt)}</td>
-                      <td className="amount">₱{(order.totalAmount || 0).toFixed(2)}</td>
+                      <td className="amount">₱{(parseFloat(order.totalAmount) || 0).toFixed(2)}</td>
                       <td>
-                        <span className={`status-badge status-${order.status || 'pending'}`}>
-                          {(order.status || 'pending').charAt(0).toUpperCase() + (order.status || 'pending').slice(1)}
-                        </span>
+                        <select 
+                          className={`status-select status-${order.status || 'pending'}`}
+                          value={order.status || 'pending'}
+                          onChange={(e) => handleStatusChange(order.id, e.target.value)}
+                        >
+                          <option value="pending">Pending</option>
+                          <option value="processing">Processing</option>
+                          <option value="shipped">Shipped</option>
+                          <option value="delivered">Delivered</option>
+                          <option value="cancelled">Cancelled</option>
+                        </select>
                       </td>
                       <td>
                         <button className="btn-view" onClick={() => handleViewOrder(order)}>
                           View Details
+                        </button>
+                        <button className="btn-delete" onClick={() => handleDeleteOrder(order.id)}>
+                          Delete
                         </button>
                       </td>
                     </tr>
@@ -170,9 +225,17 @@ function AdminOrdersPage() {
                 </div>
                 <div className="info-row">
                   <span className="label">Status:</span>
-                  <span className={`status-badge status-${selectedOrder.status || 'pending'}`}>
-                    {(selectedOrder.status || 'pending').charAt(0).toUpperCase() + (selectedOrder.status || 'pending').slice(1)}
-                  </span>
+                  <select 
+                    className={`status-select status-${selectedOrder.status || 'pending'}`}
+                    value={selectedOrder.status || 'pending'}
+                    onChange={(e) => handleStatusChange(selectedOrder.id, e.target.value)}
+                  >
+                    <option value="pending">Pending</option>
+                    <option value="processing">Processing</option>
+                    <option value="shipped">Shipped</option>
+                    <option value="delivered">Delivered</option>
+                    <option value="cancelled">Cancelled</option>
+                  </select>
                 </div>
                 <div className="info-row">
                   <span className="label">Date:</span>
@@ -218,7 +281,7 @@ function AdminOrdersPage() {
               <div className="total-section">
                 <div className="total-row">
                   <span className="total-label">Total Amount:</span>
-                  <span className="total-value">₱{(selectedOrder.totalAmount || 0).toFixed(2)}</span>
+                  <span className="total-value">₱{(parseFloat(selectedOrder.totalAmount) || 0).toFixed(2)}</span>
                 </div>
               </div>
             </div>

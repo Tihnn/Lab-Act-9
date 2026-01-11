@@ -21,14 +21,14 @@ export class UsersService {
     }
 
     const hashedPassword = await bcrypt.hash(userData.password, 10);
-    const userEntity: any = this.userRepository.create({
+    const userEntity = this.userRepository.create({
       ...userData,
       password: hashedPassword,
     });
 
-    await this.userRepository.save(userEntity);
+    const savedUser = await this.userRepository.save(userEntity);
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { password, ...result } = userEntity;
+    const { password, ...result } = savedUser as unknown as User;
     return result;
   }
 
@@ -50,6 +50,11 @@ export class UsersService {
   }
 
   async updateProfile(userId: number, updateData: any) {
+    // If password is being updated, hash it first
+    if (updateData.password) {
+      updateData.password = await bcrypt.hash(updateData.password, 10);
+    }
+    
     await this.userRepository.update(userId, updateData);
     const user = await this.userRepository.findOne({ where: { id: userId } });
     if (!user) {

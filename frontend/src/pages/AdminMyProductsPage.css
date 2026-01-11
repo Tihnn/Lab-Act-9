@@ -225,6 +225,34 @@
   font-weight: 600;
 }
 
+.low-stock-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: #ff9800;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  z-index: 10;
+  box-shadow: 0 2px 8px rgba(255, 152, 0, 0.4);
+}
+
+.out-of-stock-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: #f44336;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  z-index: 10;
+  box-shadow: 0 2px 8px rgba(244, 67, 54, 0.4);
+}
+
 .product-info {
   padding: 20px;
 }
@@ -240,6 +268,19 @@
   font-size: 13px;
   color: #ff6b6b;
   font-weight: 600;
+  margin: 0 0 10px 0;
+}
+
+.category-badge {
+  display: inline-block;
+  background: #4CAF50;
+  color: white;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
   margin: 0 0 10px 0;
 }
 

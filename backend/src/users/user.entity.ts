@@ -24,6 +24,9 @@ export class User {
   address: string;
 
   @Column({ nullable: true })
+  postalCode: string;
+
+  @Column({ nullable: true })
   city: string;
 
   @Column({ nullable: true })

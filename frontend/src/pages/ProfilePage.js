@@ -8,10 +8,14 @@ function ProfilePage() {
   const navigate = useNavigate();
   const location = useLocation();
   const [isEditing, setIsEditing] = useState(false);
+  const [cartCount, setCartCount] = useState(0);
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
     email: '',
+    phone: '',
+    address: '',
+    postalCode: '',
     currentPassword: '',
     newPassword: '',
     confirmNewPassword: ''
@@ -24,6 +28,48 @@ function ProfilePage() {
   const [toastSubtitle, setToastSubtitle] = useState('');
   const [toastIcon, setToastIcon] = useState(null);
   const [toastType, setToastType] = useState('success');
+
+  const formatPhoneNumber = (value) => {
+    // Remove all non-digits
+    const digits = value.replace(/\D/g, '');
+    
+    // Ensure it starts with 63
+    let phoneDigits = digits;
+    if (!phoneDigits.startsWith('63')) {
+      phoneDigits = '63' + phoneDigits;
+    }
+    
+    // Format as 63+ xxx-xxx-xxxx
+    if (phoneDigits.length <= 2) {
+      return phoneDigits;
+    } else if (phoneDigits.length <= 5) {
+      return `${phoneDigits.slice(0, 2)}+ ${phoneDigits.slice(2)}`;
+    } else if (phoneDigits.length <= 8) {
+      return `${phoneDigits.slice(0, 2)}+ ${phoneDigits.slice(2, 5)}-${phoneDigits.slice(5)}`;
+    } else {
+      return `${phoneDigits.slice(0, 2)}+ ${phoneDigits.slice(2, 5)}-${phoneDigits.slice(5, 8)}-${phoneDigits.slice(8, 12)}`;
+    }
+  };
+
+  const stripPhoneFormatting = (phone) => {
+    // Remove all non-digits from phone number for database storage
+    return phone.replace(/\D/g, '');
+  };
+
+  const updateCartCount = async () => {
+    try {
+      const userStr = localStorage.getItem('bikeshop_current_user_v1');
+      if (userStr) {
+        const user = JSON.parse(userStr);
+        const response = await axios.get(`http://localhost:3001/api/cart/${user.id}`);
+        const items = response.data.data || [];
+        setCartCount(items.length);
+      }
+    } catch (error) {
+      console.error('Error loading cart count:', error);
+      setCartCount(0);
+    }
+  };
 
   useEffect(() => {
     const userStr = localStorage.getItem('bikeshop_current_user_v1');
@@ -44,14 +90,15 @@ function ProfilePage() {
         firstName: user.firstName || '',
         lastName: user.lastName || '',
         email: user.email || '',
+        phone: user.phone ? formatPhoneNumber(user.phone) : '',
+        address: user.address || '',
+        postalCode: user.postalCode || '',
         currentPassword: '',
         newPassword: '',
         confirmNewPassword: ''
       });
-      // If navigated with edit state (e.g., from 'My Account'), enable editing immediately
-      if (location.state && location.state.edit && !user.isAdmin) {
-        setIsEditing(true);
-      }
+      // Always start in view mode - user must click Edit button to enable editing
+      updateCartCount();
     } catch {
       navigate('/login');
     }
@@ -75,11 +122,12 @@ function ProfilePage() {
   };
 
   const user = getUserInfo();
-  const userInitial = user?.firstName ? user.firstName.charAt(0).toUpperCase() : 'U';
+  const userInitial = user?.firstName ? user.firstName.charAt(0).toUpperCase() : '';
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    const newValue = name === 'phone' ? formatPhoneNumber(value) : value;
+    setFormData(prev => ({ ...prev, [name]: newValue }));
     // Clear error when user starts typing
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: false }));
@@ -97,8 +145,12 @@ function ProfilePage() {
     }
     if (!formData.email.trim()) {
       newErrors.email = true;
-    } else if (!formData.email.endsWith('@gmail.com')) {
-      newErrors.email = true;
+    } else {
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(formData.email.trim())) {
+        newErrors.email = true;
+      }
     }
 
     // Password validation only if user is trying to change password
@@ -142,6 +194,9 @@ function ProfilePage() {
         firstName: formData.firstName,
         lastName: formData.lastName,
         email: formData.email.toLowerCase(),
+        phone: stripPhoneFormatting(formData.phone),
+        address: formData.address,
+        postalCode: formData.postalCode,
       };
 
       // If password is being changed, include it
@@ -187,6 +242,9 @@ function ProfilePage() {
       firstName: user.firstName || '',
       lastName: user.lastName || '',
       email: user.email || '',
+      phone: user.phone ? formatPhoneNumber(user.phone) : '',
+      address: user.address || '',
+      postalCode: user.postalCode || '',
       currentPassword: '',
       newPassword: '',
       confirmNewPassword: ''
@@ -204,16 +262,19 @@ function ProfilePage() {
       {/* Navigation */}
       <header className="navbar">
         <div className="navbar-container">
-          <div className="logo" onClick={() => navigate('/')}>
+          <div className="logo" onClick={() => navigate('/home')}>
             PedalHub
             {user && (
               <span className="logo-suffix"> / {user.isAdmin ? 'Admin' : (user.email || 'User')}</span>
             )}
           </div>
           <nav className="nav-links">
-            <button onClick={() => navigate('/')}>HOME</button>
+            <button onClick={() => navigate('/home')}>HOME</button>
             <button onClick={() => navigate('/products')}>PRODUCTS</button>
-            <button onClick={() => navigate('/cart')}>CART</button>
+            <div className="cart-nav-button">
+              <button onClick={() => navigate('/cart')}>CART</button>
+              {cartCount > 0 && <span className="cart-badge">{cartCount}</span>}
+            </div>
           </nav>
           <div className="nav-actions">
             <button className="account-button" onClick={() => navigate('/profile')}>
@@ -275,7 +336,46 @@ function ProfilePage() {
                     disabled={!isEditing}
                     className={errors.email ? 'error' : ''}
                   />
-                  {errors.email && <span className="error-text">Email must be @gmail.com</span>}
+                </div>
+
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>Phone Number</label>
+                    <input
+                      type="tel"
+                      name="phone"
+                      value={formData.phone}
+                      onChange={handleChange}
+                      disabled={!isEditing}
+                      className={errors.phone ? 'error' : ''}
+                      placeholder="63+ xxx-xxx-xxxx"
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label>Postal Code</label>
+                    <input
+                      type="text"
+                      name="postalCode"
+                      value={formData.postalCode}
+                      onChange={handleChange}
+                      disabled={!isEditing}
+                      className={errors.postalCode ? 'error' : ''}
+                      placeholder="12345"
+                    />
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label>Address</label>
+                  <textarea
+                    name="address"
+                    value={formData.address}
+                    onChange={handleChange}
+                    disabled={!isEditing}
+                    className={errors.address ? 'error' : ''}
+                    rows="3"
+                  />
                 </div>
               </div>
 
@@ -308,7 +408,7 @@ function ProfilePage() {
                         </svg>
                       ) : (
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                          <path d="M1 12s4-8 11-8 11 8 11 8-4u 8-11 8-11-8-11-8z"/>
                           <circle cx="12" cy="12" r="3"/>
                         </svg>
                       )}
@@ -389,6 +489,14 @@ function ProfilePage() {
                 </div>
               </div>
             </div>
+
+            {!isEditing && (
+              <div className="form-actions">
+                <button type="button" className="edit-btn" onClick={() => setIsEditing(true)}>
+                  Edit Profile
+                </button>
+              </div>
+            )}
 
             {isEditing && (
               <div className="form-actions">
