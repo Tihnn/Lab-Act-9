@@ -1,5 +1,6 @@
 ﻿import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import axios from 'axios';
 import './LoginPage.css';
 
 function LoginPage() {
@@ -36,7 +37,7 @@ function LoginPage() {
 
   const clearAlertLater = (setter, ms = 3500) => setTimeout(() => setter(''), ms);
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     setLoginAlert('');
     setLoginErrors({ email: false, password: false });
@@ -51,49 +52,34 @@ function LoginPage() {
       return;
     }
 
-    if (loginData.email && !loginData.email.includes('@') && loginData.email.toLowerCase() !== 'admin') {
+    if (loginData.email && !loginData.email.includes('@')) {
       setLoginAlert('Invalid credentials. Please check your email and password.');
       setLoginErrors({ email: true, password: false });
       clearAlertLater(setLoginAlert);
       return;
     }
 
-    if ((loginData.email === 'admin@pedalhub.com' || loginData.email.toLowerCase() === 'admin@pedalhub.com') && loginData.password === '@Admin123') {
-      const adminUser = {
-        id: 'admin',
-        username: 'admin',
-        firstName: 'Admin',
-        lastName: '',
-        email: 'admin@pedalhub.com',
-        isAdmin: true
-      };
-      localStorage.setItem('bikeshop_current_user_v1', JSON.stringify(adminUser));
-      const redirectTo = location.state?.redirect || '/admin/dashboard';
-      navigate(redirectTo);
-      return;
-    }
-
     try {
-      const registered = JSON.parse(localStorage.getItem('bikeshop_registered_users') || '[]');
-      const found = registered.find(u => (u.email && u.email.toLowerCase() === loginData.email.toLowerCase() || u.username === loginData.email) && u.password === loginData.password);
-      if (found) {
-        localStorage.setItem('bikeshop_current_user_v1', JSON.stringify(found));
-        const redirectTo = location.state?.redirect || '/';
+      const response = await axios.post('http://localhost:3001/api/users/login', {
+        email: loginData.email,
+        password: loginData.password
+      });
+
+      if (response.data.success) {
+        const user = response.data.data;
+        localStorage.setItem('bikeshop_current_user_v1', JSON.stringify(user));
+        const redirectTo = user.isAdmin ? (location.state?.redirect || '/admin/dashboard') : (location.state?.redirect || '/products');
         navigate(redirectTo);
-      } else {
-        setLoginAlert('Invalid credentials. Please check your email and password.');
-        setLoginErrors({ email: true, password: true });
-        clearAlertLater(setLoginAlert);
       }
     } catch (err) {
       console.error('Login error:', err);
-      setLoginAlert('Login failed. Please try again.');
+      setLoginAlert('Invalid credentials. Please check your email and password.');
       setLoginErrors({ email: true, password: true });
       clearAlertLater(setLoginAlert);
     }
   };
 
-  const handleRegister = (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
     setRegisterAlert('');
     setRegisterErrors({
@@ -141,31 +127,28 @@ function LoginPage() {
     }
 
     try {
-      const registered = JSON.parse(localStorage.getItem('bikeshop_registered_users') || '[]');
-      if (registered.find(u => u.email && u.email.toLowerCase() === emailVal)) {
-        setRegisterAlert('An account with this email already exists. Please login.');
-        setRegisterErrors(prev => ({ ...prev, email: true }));
-        clearAlertLater(setRegisterAlert);
-        return;
-      }
-
-      const newUser = {
-        id: Date.now(),
-        username: emailVal,
+      const response = await axios.post('http://localhost:3001/api/users/register', {
+        email: emailVal,
         password: registerData.password,
         firstName: registerData.firstName,
         lastName: registerData.lastName,
-        email: emailVal,
         isAdmin: false
-      };
+      });
 
-      registered.push(newUser);
-      localStorage.setItem('bikeshop_registered_users', JSON.stringify(registered));
-      localStorage.setItem('bikeshop_current_user_v1', JSON.stringify(newUser));
-      navigate('/');
+      if (response.data.success) {
+        const user = response.data.data;
+        localStorage.setItem('bikeshop_current_user_v1', JSON.stringify(user));
+        navigate('/products');
+      }
     } catch (error) {
       console.error('Registration error:', error);
-      setRegisterAlert('Registration failed. Please try again.');
+      const errorMsg = error.response?.data?.message || error.message || 'Registration failed. Please try again.';
+      if (errorMsg.includes('Email already registered')) {
+        setRegisterAlert('An account with this email already exists. Please login.');
+        setRegisterErrors(prev => ({ ...prev, email: true }));
+      } else {
+        setRegisterAlert(errorMsg);
+      }
       clearAlertLater(setRegisterAlert);
     }
   };

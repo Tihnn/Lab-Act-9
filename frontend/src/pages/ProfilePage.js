@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import axios from 'axios';
 import './ProfilePage.css';
 import Toast from '../components/Toast';
 
@@ -122,7 +123,7 @@ function ProfilePage() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
 
     if (!validateForm()) {
@@ -135,73 +136,42 @@ function ProfilePage() {
 
     try {
       const currentUser = getUserInfo();
-      const registered = JSON.parse(localStorage.getItem('bikeshop_registered_users') || '[]');
-      const userIndex = registered.findIndex(u => u.id === currentUser.id);
 
-      if (userIndex === -1) {
-        setToastType('error');
-        setToastIcon('error');
-        setToastTitle('User not found');
-        setToastSubtitle('');
-        return;
-      }
-
-      // Check if trying to change password
-      if (formData.currentPassword) {
-        if (registered[userIndex].password !== formData.currentPassword) {
-          setToastType('error');
-          setToastIcon('error');
-          setToastTitle('Current password is incorrect');
-          setToastSubtitle('');
-          setErrors(prev => ({ ...prev, currentPassword: true }));
-          return;
-        }
-      }
-
-      // Check if email is being changed and if it's already taken
-      if (formData.email.toLowerCase() !== currentUser.email.toLowerCase()) {
-        const emailExists = registered.find((u, idx) => 
-          idx !== userIndex && u.email && u.email.toLowerCase() === formData.email.toLowerCase()
-        );
-        if (emailExists) {
-          setToastType('error');
-          setToastIcon('error');
-          setToastTitle('Email already in use');
-          setToastSubtitle('Please use a different email');
-          setErrors(prev => ({ ...prev, email: true }));
-          return;
-        }
-      }
-
-      // Update user data
-      const updatedUser = {
-        ...registered[userIndex],
+      // Prepare update data
+      const updateData = {
         firstName: formData.firstName,
         lastName: formData.lastName,
         email: formData.email.toLowerCase(),
-        username: formData.email.toLowerCase(),
-        password: formData.newPassword || registered[userIndex].password
       };
 
-      registered[userIndex] = updatedUser;
-      localStorage.setItem('bikeshop_registered_users', JSON.stringify(registered));
-      localStorage.setItem('bikeshop_current_user_v1', JSON.stringify(updatedUser));
+      // If password is being changed, include it
+      if (formData.newPassword) {
+        updateData.password = formData.newPassword;
+      }
 
-      setToastType('success');
-      setToastIcon('check');
-      setToastTitle('Profile updated successfully');
-      setToastSubtitle('');
-      
-      // Reset password fields
-      setFormData(prev => ({
-        ...prev,
-        currentPassword: '',
-        newPassword: '',
-        confirmNewPassword: ''
-      }));
-      
-      setIsEditing(false);
-      setErrors({});
+      // Call backend API to update profile
+      const response = await axios.put(`http://localhost:3001/api/users/${currentUser.id}`, updateData);
+
+      if (response.data.success) {
+        const updatedUser = response.data.data;
+        localStorage.setItem('bikeshop_current_user_v1', JSON.stringify(updatedUser));
+
+        setToastType('success');
+        setToastIcon('check');
+        setToastTitle('Profile updated successfully');
+        setToastSubtitle('');
+        
+        // Reset password fields
+        setFormData(prev => ({
+          ...prev,
+          currentPassword: '',
+          newPassword: '',
+          confirmNewPassword: ''
+        }));
+        
+        setIsEditing(false);
+        setErrors({});
+      }
     } catch (error) {
       console.error('Error updating profile:', error);
       setToastType('error');
