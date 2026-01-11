@@ -1,0 +1,258 @@
+.auth-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background-image: url('https://images.unsplash.com/photo-1532298229144-0ec0c57515c7?w=1600&q=80');
+  background-size: cover;
+  background-position: center;
+  position: relative;
+}
+
+.auth-page::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+/* Navigation */
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: #2D2D2D;
+  backdrop-filter: blur(10px);
+  z-index: 1000;
+  padding: 0;
+}
+
+.navbar-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 40px;
+}
+
+.logo {
+  font-size: 28px;
+  font-weight: 800;
+  color: white;
+  font-style: italic;
+  letter-spacing: 1px;
+}
+
+.nav-links {
+  display: flex;
+  gap: 40px;
+  flex: 1;
+  justify-content: center;
+}
+
+.nav-links button {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.4);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 14px;
+  letter-spacing: 1px;
+  cursor: not-allowed;
+  padding: 5px 10px;
+}
+
+.user-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  color: #333;
+  font-size: 20px;
+}
+
+.user-icon svg {
+  width: 24px;
+  height: 24px;
+  color: #333;
+}
+
+.person-icon {
+  font-style: normal;
+}
+
+/* Auth Container */
+.auth-container {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 120px 20px 60px;
+}
+
+.auth-card {
+  background: white;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 420px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+}
+
+/* Tabs */
+.auth-tabs {
+  display: flex;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.auth-tab {
+  flex: 1;
+  padding: 20px;
+  background: none;
+  border: none;
+  font-size: 16px;
+  font-weight: 600;
+  color: #666;
+  cursor: pointer;
+  position: relative;
+  transition: color 0.3s;
+}
+
+.auth-tab:hover {
+  color: #333;
+}
+
+.auth-tab.active {
+  color: #333;
+}
+
+.auth-tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: #ff6b6b;
+}
+
+/* Form */
+.auth-form {
+  padding: 40px 40px 50px;
+}
+
+.auth-brand {
+  font-size: 26px;
+  font-weight: 800;
+  font-style: italic;
+  color: #2D2D2D;
+  margin-bottom: 30px;
+  text-align: center;
+  letter-spacing: 1px;
+}
+
+.auth-input {
+  width: 100%;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #333;
+  background: #f9f9f9;
+  transition: all 0.3s;
+  box-sizing: border-box;
+}
+
+.auth-input:focus {
+  outline: none;
+  border-color: #333;
+  background: white;
+}
+
+.auth-input.error {
+  border: 2px solid #ff4d4d;
+}
+
+.auth-input.error:focus {
+  border-color: #ff4d4d;
+  background: white;
+}
+
+.auth-input::placeholder {
+  color: #999;
+}
+
+.auth-button {
+  width: 100%;
+  padding: 16px;
+  background: #2D2D2D;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 10px;
+  transition: background 0.3s;
+}
+
+.auth-button:hover {
+  background: #1a1a1a;
+}
+
+.auth-button:active {
+  transform: translateY(1px);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .navbar-container {
+    padding: 15px 20px;
+  }
+
+  .logo {
+    font-size: 24px;
+  }
+
+  .nav-links {
+    gap: 20px;
+  }
+
+  .nav-links button {
+    font-size: 12px;
+  }
+
+  .auth-card {
+    max-width: 90%;
+  }
+
+  .auth-form {
+    padding: 30px 25px;
+  }
+
+  .auth-brand {
+    font-size: 28px;
+  }
+}
+
+/* Centered form-level alert (used for inline validation messages) */
+.form-alert {
+  text-align: center;
+  background: rgba(255, 107, 107, 0.06);
+  color: #ff4d4d;
+  border: 1px solid rgba(255, 107, 107, 0.18);
+  padding: 10px 12px;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  font-weight: 700;
+}
