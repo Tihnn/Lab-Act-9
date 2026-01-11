@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getCart, createOrder, clearCart } from '../services/api';
+import { getCart, createOrder, clearCart, removeCartItems } from '../services/api';
 import './CheckoutPage.css';
 
 function CheckoutPage() {
@@ -65,8 +65,15 @@ function CheckoutPage() {
 
   const loadCart = async () => {
     try {
-      const response = await getCart();
-      setCartItems(response.data);
+      // Get selected items from localStorage (set by CartPage)
+      const checkoutItems = localStorage.getItem('checkout_items');
+      if (checkoutItems) {
+        const items = JSON.parse(checkoutItems);
+        setCartItems(items);
+      } else {
+        // Fallback: if no selected items, redirect to cart
+        navigate('/cart');
+      }
       setLoading(false);
     } catch (error) {
       console.error('Error loading cart:', error);
@@ -115,7 +122,13 @@ function CheckoutPage() {
       };
 
       const response = await createOrder(orderData);
-      await clearCart();
+      
+      // Remove only the ordered items from the cart
+      const cartItemIds = cartItems.map(item => item.id);
+      await removeCartItems(cartItemIds);
+      
+      // Clear selected items from localStorage
+      localStorage.removeItem('checkout_items');
       navigate(`/order-confirmation/${response.data.id}`);
     } catch (error) {
       console.error('Error creating order:', error);

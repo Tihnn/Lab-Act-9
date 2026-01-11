@@ -59,4 +59,11 @@ export class CartService {
     await this.cartRepository.delete({ userId });
     return { message: 'Cart cleared' };
   }
+
+  async removeCartItems(cartItemIds: number[]) {
+    if (cartItemIds && cartItemIds.length > 0) {
+      await this.cartRepository.delete(cartItemIds);
+    }
+    return { message: 'Selected items removed from cart' };
+  }
 }

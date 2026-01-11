@@ -146,6 +146,16 @@ export const clearCart = async (userId) => {
   }
 };
 
+export const removeCartItems = async (cartItemIds) => {
+  try {
+    const response = await api.post('/api/cart/remove-items', { cartItemIds });
+    // Backend returns { success: true, data: result }
+    return { data: response.data.data };
+  } catch (error) {
+    throw error;
+  }
+};
+
 // Orders API - Using database
 export const createOrder = async (orderData) => {
   // Get current user

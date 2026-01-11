@@ -61,4 +61,14 @@ export class CartController {
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
     }
   }
+
+  @Post('remove-items')
+  async removeCartItems(@Body() data: { cartItemIds: number[] }) {
+    try {
+      const result = await this.cartService.removeCartItems(data.cartItemIds);
+      return { success: true, data: result };
+    } catch (error) {
+      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+    }
+  }
 }

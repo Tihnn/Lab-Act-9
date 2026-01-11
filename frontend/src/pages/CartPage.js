@@ -7,6 +7,7 @@ import Toast from '../components/Toast';
 function CartPage() {
   const navigate = useNavigate();
   const [cartItems, setCartItems] = useState([]);
+  const [selectedItems, setSelectedItems] = useState([]);
   const [cartCount, setCartCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [toastTitle, setToastTitle] = useState('');
@@ -65,11 +66,31 @@ function CartPage() {
     }
   };
 
+  const handleSelectItem = (itemId) => {
+    setSelectedItems(prev => {
+      if (prev.includes(itemId)) {
+        return prev.filter(id => id !== itemId);
+      } else {
+        return [...prev, itemId];
+      }
+    });
+  };
+
+  const handleSelectAll = () => {
+    if (selectedItems.length === cartItems.length) {
+      setSelectedItems([]);
+    } else {
+      setSelectedItems(cartItems.map(item => item.id));
+    }
+  };
+
   const calculateTotal = () => {
-    return cartItems.reduce((total, item) => {
-      const price = item.price || 0;
-      return total + (parseFloat(price) * item.quantity);
-    }, 0);
+    return cartItems
+      .filter(item => selectedItems.includes(item.id))
+      .reduce((total, item) => {
+        const price = item.price || 0;
+        return total + (parseFloat(price) * item.quantity);
+      }, 0);
   };
 
   const handleCheckout = () => {
@@ -80,6 +101,16 @@ function CartPage() {
       setToastSubtitle('Add items to proceed to checkout');
       return;
     }
+    if (selectedItems.length === 0) {
+      setToastType('error');
+      setToastIcon('error');
+      setToastTitle('No items selected');
+      setToastSubtitle('Please select items to checkout');
+      return;
+    }
+    // Store selected items for checkout
+    const itemsToCheckout = cartItems.filter(item => selectedItems.includes(item.id));
+    localStorage.setItem('checkout_items', JSON.stringify(itemsToCheckout));
     navigate('/checkout');
   };
 
@@ -150,6 +181,18 @@ function CartPage() {
         ) : (
           <div className="cart-content">
             <div className="cart-items">
+              <div className="select-all-container">
+                <input
+                  type="checkbox"
+                  id="select-all"
+                  checked={selectedItems.length === cartItems.length && cartItems.length > 0}
+                  onChange={handleSelectAll}
+                  className="cart-checkbox"
+                />
+                <label htmlFor="select-all" className="select-all-label">
+                  Select All ({selectedItems.length} of {cartItems.length} selected)
+                </label>
+              </div>
               {cartItems.map(item => {
                 const productName = item.productName || 'Unknown Product';
                 const productImage = item.imageUrl || 'https://via.placeholder.com/100';
@@ -158,6 +201,12 @@ function CartPage() {
                 
                 return (
                   <div key={item.id} className="cart-item">
+                    <input
+                      type="checkbox"
+                      checked={selectedItems.includes(item.id)}
+                      onChange={() => handleSelectItem(item.id)}
+                      className="cart-checkbox"
+                    />
                     <div className="item-image">
                       <img src={productImage} alt={productName} />
                     </div>
