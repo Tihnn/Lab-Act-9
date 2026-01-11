@@ -265,9 +265,7 @@ function AdminProductsPage() {
             <button onClick={() => navigate('/admin/orders')}>ORDERS</button>
           </nav>
           <div className="nav-actions">
-            <button className="account-button" onClick={() => navigate('/profile')}>
-              <span className="account-text">My Account</span>
-            </button>
+            <div className="user-icon no-click">{userInitial}</div>
             <button className="logout-btn" onClick={handleLogout}>Logout</button>
           </div>
         </div>

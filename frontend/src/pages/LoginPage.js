@@ -96,7 +96,7 @@ function LoginPage() {
       if (response.data.success) {
         const user = response.data.data;
         localStorage.setItem('bikeshop_current_user_v1', JSON.stringify(user));
-        const redirectTo = user.isAdmin ? (location.state?.redirect || '/admin/dashboard') : (location.state?.redirect || '/products');
+        const redirectTo = user.isAdmin ? (location.state?.redirect || '/admin/dashboard') : (location.state?.redirect || '/home');
         navigate(redirectTo);
       }
     } catch (err) {
@@ -175,7 +175,7 @@ function LoginPage() {
       if (response.data.success) {
         const user = response.data.data;
         localStorage.setItem('bikeshop_current_user_v1', JSON.stringify(user));
-        navigate('/products');
+        navigate('/home');
       }
     } catch (error) {
       console.error('Registration error:', error);
