@@ -7,6 +7,9 @@ import CheckoutPage from './pages/CheckoutPage';
 import OrderConfirmationPage from './pages/OrderConfirmationPage';
 import LoginPage from './pages/LoginPage';
 import AdminProductsPage from './pages/AdminProductsPage';
+import AdminDashboardPage from './pages/AdminDashboardPage';
+import AdminMyProductsPage from './pages/AdminMyProductsPage';
+import AdminOrdersPage from './pages/AdminOrdersPage';
 import ProfilePage from './pages/ProfilePage';
 
 function App() {
@@ -19,7 +22,10 @@ function App() {
         <Route path="/cart" element={<CartPage />} />
         <Route path="/checkout" element={<CheckoutPage />} />
         <Route path="/order-confirmation/:orderId" element={<OrderConfirmationPage />} />
-        <Route path="/admin/products" element={<AdminProductsPage />} />
+        <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
+        <Route path="/admin/products" element={<AdminMyProductsPage />} />
+        <Route path="/admin/add-product" element={<AdminProductsPage />} />
+        <Route path="/admin/orders" element={<AdminOrdersPage />} />
         <Route path="/profile" element={<ProfilePage />} />
       </Routes>
     </Router>

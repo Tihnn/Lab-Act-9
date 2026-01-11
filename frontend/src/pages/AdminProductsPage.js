@@ -259,14 +259,18 @@ function AdminProductsPage() {
       {/* Navigation */}
       <header className="navbar">
         <div className="navbar-container">
-          <div className="logo" onClick={() => navigate('/')}>PedalHub Admin</div>
+          <div className="logo" onClick={() => navigate('/admin/dashboard')}>
+            PedalHub <span className="logo-suffix">/ Admin</span>
+          </div>
           <nav className="nav-links">
-            <button onClick={() => navigate('/')}>HOME</button>
-            <button onClick={() => navigate('/products')}>PRODUCTS</button>
-            <button className="active">{isEditMode ? 'EDIT PRODUCT' : 'ADD PRODUCT'}</button>
+            <button onClick={() => navigate('/admin/dashboard')}>DASHBOARD</button>
+            <button onClick={() => navigate('/admin/products')}>MY PRODUCTS</button>
+            <button onClick={() => navigate('/admin/orders')}>ORDERS</button>
           </nav>
           <div className="nav-actions">
-            <div className="user-icon no-click">{userInitial}</div>
+            <button className="account-button" onClick={() => navigate('/profile')}>
+              <span className="account-text">My Account</span>
+            </button>
             <button className="logout-btn" onClick={handleLogout}>Logout</button>
           </div>
         </div>

@@ -112,19 +112,20 @@ function CartPage() {
       {/* Navigation */}
       <header className="navbar">
         <div className="navbar-container">
-          <div className="logo" onClick={() => navigate('/')}>PedalHub</div>
+          <div className="logo" onClick={() => navigate('/')}>
+            PedalHub
+            {user && (
+              <span className="logo-suffix"> / {isAdmin ? 'Admin' : (user.email || 'User')}</span>
+            )}
+          </div>
           <nav className="nav-links">
             <button onClick={() => navigate('/')}>HOME</button>
             <button onClick={() => navigate('/products')}>CONTINUE SHOPPING</button>
           </nav>
           <div className="nav-actions">
-            <div 
-              className={`user-icon ${isAdmin ? 'no-click' : ''}`}
-              onClick={() => !isAdmin && navigate('/profile')}
-              style={{ cursor: isAdmin ? 'default' : 'pointer' }}
-            >
-              {userInitial}
-            </div>
+            <button className="account-button" onClick={() => navigate('/profile', { state: { edit: true } })}>
+              <span className="account-text">My Account</span>
+            </button>
             <button className="logout-btn" onClick={handleLogout}>Logout</button>
           </div>
         </div>

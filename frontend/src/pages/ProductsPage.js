@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { getAllProducts, addToCart } from '../services/api';
 import Toast from '../components/Toast';
 import './ProductsPage.css';
@@ -14,6 +14,8 @@ function ProductsPage() {
   });
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [categoryOpen, setCategoryOpen] = useState(false);
+  const location = useLocation();
   const [cartCount, setCartCount] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
   const [toastTitle, setToastTitle] = useState('');
@@ -25,6 +27,10 @@ function ProductsPage() {
   useEffect(() => {
     loadProducts();
     updateCartCount();
+    // honor ?category= query from other pages
+    const params = new URLSearchParams(location.search);
+    const cat = params.get('category');
+    if (cat) setSelectedCategory(cat);
   }, []);
 
   const loadProducts = async () => {
@@ -174,26 +180,36 @@ function ProductsPage() {
       {/* Navigation */}
       <header className="navbar">
         <div className="navbar-container">
-          <div className="logo" onClick={() => navigate('/')}>PedalHub</div>
+          <div className="logo" onClick={() => navigate('/')}>
+            PedalHub
+            {user && (
+              <span className="logo-suffix"> / {isAdmin ? 'Admin' : (user.email || 'User')}</span>
+            )}
+          </div>
           <nav className="nav-links">
             <button onClick={() => navigate('/')} className="home-btn">
               HOME
             </button>
-            <button onClick={() => setSelectedCategory('all')} className={selectedCategory === 'all' ? 'active' : ''}>
-              ALL
-            </button>
-            <button onClick={() => setSelectedCategory('bicycles')} className={selectedCategory === 'bicycles' ? 'active' : ''}>
-              BICYCLES
-            </button>
-            <button onClick={() => setSelectedCategory('parts')} className={selectedCategory === 'parts' ? 'active' : ''}>
-              PARTS
-            </button>
-            <button onClick={() => setSelectedCategory('accessories')} className={selectedCategory === 'accessories' ? 'active' : ''}>
-              ACCESSORIES
-            </button>
-            <button onClick={() => setSelectedCategory('clothing')} className={selectedCategory === 'clothing' ? 'active' : ''}>
-              CLOTHING
-            </button>
+
+            <div className="category-dropdown">
+              <button
+                className="dropdown-toggle"
+                onClick={() => setCategoryOpen(prev => !prev)}
+                aria-expanded={categoryOpen}
+              >
+                {selectedCategory === 'all' ? 'CATEGORIES' : selectedCategory.toUpperCase()}
+                <span className={`caret ${categoryOpen ? 'open' : ''}`}>▾</span>
+              </button>
+              {categoryOpen && (
+                <ul className="dropdown-menu">
+                  <li onClick={() => { setSelectedCategory('all'); setCategoryOpen(false); }}>ALL</li>
+                  <li onClick={() => { setSelectedCategory('bicycles'); setCategoryOpen(false); }}>BICYCLES</li>
+                  <li onClick={() => { setSelectedCategory('parts'); setCategoryOpen(false); }}>PARTS</li>
+                  <li onClick={() => { setSelectedCategory('accessories'); setCategoryOpen(false); }}>ACCESSORIES</li>
+                  <li onClick={() => { setSelectedCategory('clothing'); setCategoryOpen(false); }}>CLOTHING</li>
+                </ul>
+              )}
+            </div>
           </nav>
           <div className="nav-actions">
             <input
@@ -209,13 +225,9 @@ function ProductsPage() {
                 {cartCount > 0 && <span className="cart-count">{cartCount}</span>}
               </div>
             )}
-            <div 
-              className={`user-icon ${isAdmin ? 'no-click' : ''}`}
-              onClick={() => !isAdmin && navigate('/profile')}
-              style={{ cursor: isAdmin ? 'default' : 'pointer' }}
-            >
-              {userInitial}
-            </div>
+            <button className="account-button" onClick={() => navigate('/profile', { state: { edit: true } })}>
+              <span className="account-text">My Account</span>
+            </button>
             <button className="logout-btn" onClick={handleLogout}>Logout</button>
           </div>
         </div>

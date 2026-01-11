@@ -33,6 +33,14 @@
   letter-spacing: 1px;
 }
 
+.logo-suffix {
+  margin-left: 8px;
+  color: #ff6b6b;
+  font-weight: 700;
+  font-style: normal;
+  font-size: 18px;
+}
+
 .nav-links {
   display: flex;
   gap: 30px;
@@ -79,6 +87,30 @@
 .user-icon.no-click {
   cursor: default;
   pointer-events: none;
+}
+
+/* Combined account button for admin navbar */
+.account-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  background: transparent;
+  border: none;
+  color: #fff;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.account-button:hover {
+  color: #ff6b6b;
+  background: transparent;
+}
+
+.account-text {
+  color: #ffffff;
+  font-size: 15px;
 }
 
 .logout-btn {

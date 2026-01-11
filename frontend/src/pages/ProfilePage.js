@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import './ProfilePage.css';
 import Toast from '../components/Toast';
 
 function ProfilePage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     firstName: '',
@@ -15,6 +16,9 @@ function ProfilePage() {
     confirmNewPassword: ''
   });
   const [errors, setErrors] = useState({});
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [toastTitle, setToastTitle] = useState('');
   const [toastSubtitle, setToastSubtitle] = useState('');
   const [toastIcon, setToastIcon] = useState(null);
@@ -43,6 +47,10 @@ function ProfilePage() {
         newPassword: '',
         confirmNewPassword: ''
       });
+      // If navigated with edit state (e.g., from 'My Account'), enable editing immediately
+      if (location.state && location.state.edit && !user.isAdmin) {
+        setIsEditing(true);
+      }
     } catch {
       navigate('/login');
     }
@@ -226,14 +234,21 @@ function ProfilePage() {
       {/* Navigation */}
       <header className="navbar">
         <div className="navbar-container">
-          <div className="logo" onClick={() => navigate('/')}>PedalHub</div>
+          <div className="logo" onClick={() => navigate('/')}>
+            PedalHub
+            {user && (
+              <span className="logo-suffix"> / {user.isAdmin ? 'Admin' : (user.email || 'User')}</span>
+            )}
+          </div>
           <nav className="nav-links">
             <button onClick={() => navigate('/')}>HOME</button>
             <button onClick={() => navigate('/products')}>PRODUCTS</button>
             <button onClick={() => navigate('/cart')}>CART</button>
           </nav>
           <div className="nav-actions">
-            <div className="user-icon active">{userInitial}</div>
+            <button className="account-button" onClick={() => navigate('/profile')}>
+              <span className="account-text">My Account</span>
+            </button>
             <button className="logout-btn" onClick={handleLogout}>Logout</button>
           </div>
         </div>
@@ -250,18 +265,12 @@ function ProfilePage() {
             <p className="profile-email">{user.email}</p>
           </div>
 
-          <div className="profile-content">
-            <div className="profile-section-header">
-              <h2>Personal Information</h2>
-              {!isEditing && (
-                <button className="edit-btn" onClick={() => setIsEditing(true)}>
-                  Edit Profile
-                </button>
-              )}
-            </div>
-
-            <form onSubmit={handleSave} className="profile-form">
-              <div className="form-row">
+          <form onSubmit={handleSave} className="profile-form">
+            <div className="form-columns">
+              {/* Left Column - Personal Information */}
+              <div className="form-column">
+                <h2 className="section-title">Personal Information</h2>
+                
                 <div className="form-group">
                   <label>First Name</label>
                   <input
@@ -285,85 +294,143 @@ function ProfilePage() {
                     className={errors.lastName ? 'error' : ''}
                   />
                 </div>
+
+                <div className="form-group">
+                  <label>Email Address</label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    disabled={!isEditing}
+                    className={errors.email ? 'error' : ''}
+                  />
+                  {errors.email && <span className="error-text">Email must be @gmail.com</span>}
+                </div>
               </div>
 
-              <div className="form-group">
-                <label>Email Address</label>
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  disabled={!isEditing}
-                  className={errors.email ? 'error' : ''}
-                />
-                {errors.email && <span className="error-text">Email must be @gmail.com</span>}
-              </div>
-
-              {isEditing && (
-                <>
-                  <div className="divider">
-                    <span>Change Password (Optional)</span>
-                  </div>
-
-                  <div className="form-group">
-                    <label>Current Password</label>
+              {/* Right Column - Change Password */}
+              <div className="form-column">
+                <h2 className="section-title">Change Password</h2>
+                
+                <div className="form-group">
+                  <label>Current Password</label>
+                  <div className="password-input-wrapper">
                     <input
-                      type="password"
+                      type={showCurrentPassword ? "text" : "password"}
                       name="currentPassword"
                       value={formData.currentPassword}
                       onChange={handleChange}
                       placeholder="Enter current password to change"
+                      disabled={!isEditing}
                       className={errors.currentPassword ? 'error' : ''}
                     />
-                  </div>
-
-                  <div className="form-row">
-                    <div className="form-group">
-                      <label>New Password</label>
-                      <input
-                        type="password"
-                        name="newPassword"
-                        value={formData.newPassword}
-                        onChange={handleChange}
-                        placeholder="New password"
-                        className={errors.newPassword ? 'error' : ''}
-                      />
-                      {errors.newPassword && (
-                        <span className="error-text">Must be 8+ chars with upper, lower, number & symbol</span>
+                    <button
+                      type="button"
+                      className="password-toggle"
+                      onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                      disabled={!isEditing}
+                    >
+                      {showCurrentPassword ? (
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                          <line x1="1" y1="1" x2="23" y2="23"/>
+                        </svg>
+                      ) : (
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                          <circle cx="12" cy="12" r="3"/>
+                        </svg>
                       )}
-                    </div>
-
-                    <div className="form-group">
-                      <label>Confirm New Password</label>
-                      <input
-                        type="password"
-                        name="confirmNewPassword"
-                        value={formData.confirmNewPassword}
-                        onChange={handleChange}
-                        placeholder="Confirm new password"
-                        className={errors.confirmNewPassword ? 'error' : ''}
-                      />
-                      {errors.confirmNewPassword && (
-                        <span className="error-text">Passwords do not match</span>
-                      )}
-                    </div>
+                    </button>
                   </div>
-                </>
-              )}
-
-              {isEditing && (
-                <div className="form-actions">
-                  <button type="button" className="cancel-btn" onClick={handleCancel}>
-                    Cancel
-                  </button>
-                  <button type="submit" className="save-btn">
-                    Save Changes
-                  </button>
                 </div>
-              )}
-            </form>
-          </div>
+
+                <div className="form-group">
+                  <label>New Password</label>
+                  <div className="password-input-wrapper">
+                    <input
+                      type={showNewPassword ? "text" : "password"}
+                      name="newPassword"
+                      value={formData.newPassword}
+                      onChange={handleChange}
+                      placeholder="New password"
+                      disabled={!isEditing}
+                      className={errors.newPassword ? 'error' : ''}
+                    />
+                    <button
+                      type="button"
+                      className="password-toggle"
+                      onClick={() => setShowNewPassword(!showNewPassword)}
+                      disabled={!isEditing}
+                    >
+                      {showNewPassword ? (
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                          <line x1="1" y1="1" x2="23" y2="23"/>
+                        </svg>
+                      ) : (
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                          <circle cx="12" cy="12" r="3"/>
+                        </svg>
+                      )}
+                    </button>
+                  </div>
+                  {errors.newPassword && (
+                    <span className="error-text">Must be 8+ chars with upper, lower, number & symbol</span>
+                  )}
+                </div>
+
+                <div className="form-group">
+                  <label>Confirm New Password</label>
+                  <div className="password-input-wrapper">
+                    <input
+                      type={showConfirmPassword ? "text" : "password"}
+                      name="confirmNewPassword"
+                      value={formData.confirmNewPassword}
+                      onChange={handleChange}
+                      placeholder="Confirm new password"
+                      disabled={!isEditing}
+                      className={errors.confirmNewPassword ? 'error' : ''}
+                    />
+                    <button
+                      type="button"
+                      className="password-toggle"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      disabled={!isEditing}
+                    >
+                      {showConfirmPassword ? (
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                          <line x1="1" y1="1" x2="23" y2="23"/>
+                        </svg>
+                      ) : (
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                          <circle cx="12" cy="12" r="3"/>
+                        </svg>
+                      )}
+                    </button>
+                  </div>
+                  {errors.confirmNewPassword && (
+                    <span className="error-text">Passwords do not match</span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {isEditing && (
+              <div className="form-actions">
+                <button type="button" className="cancel-btn" onClick={handleCancel}>
+                  Cancel
+                </button>
+                <button type="submit" className="save-btn">
+                  Save Changes
+                </button>
+              </div>
+            )}
+          </form>
         </div>
       </main>
 

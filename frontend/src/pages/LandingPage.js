@@ -5,6 +5,8 @@ import './LandingPage.css';
 function LandingPage() {
   const navigate = useNavigate();
   const [cartCount, setCartCount] = useState(0);
+  const [categoryOpen, setCategoryOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState('all');
 
   useEffect(() => {
     updateCartCount();
@@ -24,10 +26,16 @@ function LandingPage() {
     // Require login before browsing categories
     const user = localStorage.getItem('bikeshop_current_user_v1');
     if (!user) {
-      navigate('/login', { state: { redirect: `/products?category=${category}` } });
+      // redirect back to the requested products view after login
+      const redirectPath = category === 'all' ? '/products' : `/products?category=${category}`;
+      navigate('/login', { state: { redirect: redirectPath } });
       return;
     }
-    navigate(`/products?category=${category}`);
+    if (category === 'all') {
+      navigate('/products');
+    } else {
+      navigate(`/products?category=${category}`);
+    }
   };
 
   const handleLogout = () => {
@@ -57,30 +65,47 @@ function LandingPage() {
       {/* Navigation Header */}
       <header className="navbar">
         <div className="navbar-container">
-          <div className="logo">PedalHub</div>
+          <div className="logo" onClick={() => navigate('/')}>
+            PedalHub
+            {isLoggedIn && (
+              <span className="logo-suffix"> / {isAdmin ? 'Admin' : (user?.email || 'User')}</span>
+            )}
+          </div>
           <nav className="nav-links">
-            <button onClick={() => navigate('/products')}>ALL</button>
-            <button onClick={() => handleCategoryClick('bicycles')}>BICYCLES</button>
-            <button onClick={() => handleCategoryClick('parts')}>PARTS</button>
-            <button onClick={() => handleCategoryClick('accessories')}>ACCESSORIES</button>
-            <button onClick={() => handleCategoryClick('clothing')}>CLOTHING</button>
+            {/* Categories moved to the right-side nav */}
           </nav>
           <div className="nav-right">
             {isLoggedIn ? (
               <>
+                {/* category dropdown placed next to cart */}
+                <div className="category-dropdown">
+                  <button
+                    className="dropdown-toggle"
+                    onClick={() => setCategoryOpen(prev => !prev)}
+                    aria-expanded={categoryOpen}
+                  >
+                    {selectedCategory === 'all' ? 'CATEGORIES' : selectedCategory.toUpperCase()}
+                    <span className={`caret ${categoryOpen ? 'open' : ''}`}>▾</span>
+                  </button>
+                  {categoryOpen && (
+                    <ul className="dropdown-menu">
+                      <li onClick={() => { setSelectedCategory('all'); setCategoryOpen(false); handleCategoryClick('all'); }}>ALL</li>
+                      <li onClick={() => { setSelectedCategory('bicycles'); setCategoryOpen(false); handleCategoryClick('bicycles'); }}>BICYCLES</li>
+                      <li onClick={() => { setSelectedCategory('parts'); setCategoryOpen(false); handleCategoryClick('parts'); }}>PARTS</li>
+                      <li onClick={() => { setSelectedCategory('accessories'); setCategoryOpen(false); handleCategoryClick('accessories'); }}>ACCESSORIES</li>
+                      <li onClick={() => { setSelectedCategory('clothing'); setCategoryOpen(false); handleCategoryClick('clothing'); }}>CLOTHING</li>
+                    </ul>
+                  )}
+                </div>
                 {!isAdmin && (
                   <div className="cart-icon" onClick={() => navigate('/cart')}>
                     🛒
                     {cartCount > 0 && <span className="cart-count">{cartCount}</span>}
                   </div>
                 )}
-                <div 
-                  className={`user-icon ${isAdmin ? 'no-click' : ''}`}
-                  onClick={() => !isAdmin && navigate('/profile')}
-                  style={{ cursor: isAdmin ? 'default' : 'pointer' }}
-                >
-                  {userInitial}
-                </div>
+                <button className="account-button" onClick={() => navigate('/profile', { state: { edit: true } })}>
+                  <span className="account-text">My Account</span>
+                </button>
                 <button className="logout-btn" onClick={handleLogout}>Logout</button>
               </>
             ) : (
@@ -98,7 +123,10 @@ function LandingPage() {
       </header>
 
       {/* Hero Section */}
-      <section className="hero-section">
+      <section
+        className="hero-section"
+        style={{ backgroundImage: `url(${process.env.PUBLIC_URL + '/Background%20bike.jpg'})` }}
+      >
         <div className="hero-content">
           <div className="hero-text">
             <h1 className="hero-title">

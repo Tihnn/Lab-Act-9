@@ -10,6 +10,7 @@ function LoginPage() {
   const [loginData, setLoginData] = useState({ email: '', password: '' });
   const [loginAlert, setLoginAlert] = useState('');
   const [loginErrors, setLoginErrors] = useState({ email: false, password: false });
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
 
   const [registerData, setRegisterData] = useState({
     firstName: '',
@@ -26,6 +27,8 @@ function LoginPage() {
     password: false,
     confirmPassword: false
   });
+  const [showRegisterPassword, setShowRegisterPassword] = useState(false);
+  const [showRegisterConfirmPassword, setShowRegisterConfirmPassword] = useState(false);
 
   const handleCategoryClick = () => {
     alert('Please login or register first to browse categories');
@@ -55,17 +58,17 @@ function LoginPage() {
       return;
     }
 
-    if ((loginData.email === 'admin@gmail.com' || loginData.email.toLowerCase() === 'admin@gmail.com') && loginData.password === '@Admin123') {
+    if ((loginData.email === 'admin@pedalhub.com' || loginData.email.toLowerCase() === 'admin@pedalhub.com') && loginData.password === '@Admin123') {
       const adminUser = {
         id: 'admin',
         username: 'admin',
         firstName: 'Admin',
         lastName: '',
-        email: 'admin@gmail.com',
+        email: 'admin@pedalhub.com',
         isAdmin: true
       };
       localStorage.setItem('bikeshop_current_user_v1', JSON.stringify(adminUser));
-      const redirectTo = location.state?.redirect || '/';
+      const redirectTo = location.state?.redirect || '/admin/dashboard';
       navigate(redirectTo);
       return;
     }
@@ -219,16 +222,36 @@ function LoginPage() {
                 }}
               />
 
-              <input
-                type="password"
-                placeholder="Password"
-                className={`auth-input ${loginErrors.password ? 'error' : ''}`}
-                value={loginData.password}
-                onChange={(e) => {
-                  setLoginData({ ...loginData, password: e.target.value });
-                  setLoginErrors(prev => ({ ...prev, password: false }));
-                }}
-              />
+              <div className="password-input-wrapper">
+                <input
+                  type={showLoginPassword ? "text" : "password"}
+                  placeholder="Password"
+                  className={`auth-input ${loginErrors.password ? 'error' : ''}`}
+                  value={loginData.password}
+                  onChange={(e) => {
+                    setLoginData({ ...loginData, password: e.target.value });
+                    setLoginErrors(prev => ({ ...prev, password: false }));
+                  }}
+                />
+                <button
+                  type="button"
+                  className="password-toggle"
+                  onClick={() => setShowLoginPassword(!showLoginPassword)}
+                  aria-label="Toggle password visibility"
+                >
+                  {showLoginPassword ? (
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                      <line x1="1" y1="1" x2="23" y2="23"/>
+                    </svg>
+                  ) : (
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                      <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                  )}
+                </button>
+              </div>
 
               <button type="submit" className="auth-button">Login</button>
             </form>
@@ -278,27 +301,67 @@ function LoginPage() {
                 }}
               />
 
-              <input
-                type="password"
-                placeholder="Password"
-                className={`auth-input ${registerErrors.password ? 'error' : ''}`}
-                value={registerData.password}
-                onChange={(e) => {
-                  setRegisterData({ ...registerData, password: e.target.value });
-                  setRegisterErrors(prev => ({ ...prev, password: false }));
-                }}
-              />
+              <div className="password-input-wrapper">
+                <input
+                  type={showRegisterPassword ? "text" : "password"}
+                  placeholder="Password"
+                  className={`auth-input ${registerErrors.password ? 'error' : ''}`}
+                  value={registerData.password}
+                  onChange={(e) => {
+                    setRegisterData({ ...registerData, password: e.target.value });
+                    setRegisterErrors(prev => ({ ...prev, password: false }));
+                  }}
+                />
+                <button
+                  type="button"
+                  className="password-toggle"
+                  onClick={() => setShowRegisterPassword(!showRegisterPassword)}
+                  aria-label="Toggle password visibility"
+                >
+                  {showRegisterPassword ? (
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                      <line x1="1" y1="1" x2="23" y2="23"/>
+                    </svg>
+                  ) : (
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                      <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                  )}
+                </button>
+              </div>
 
-              <input
-                type="password"
-                placeholder="Confirm password"
-                className={`auth-input ${registerErrors.confirmPassword ? 'error' : ''}`}
-                value={registerData.confirmPassword}
-                onChange={(e) => {
-                  setRegisterData({ ...registerData, confirmPassword: e.target.value });
-                  setRegisterErrors(prev => ({ ...prev, confirmPassword: false }));
-                }}
-              />
+              <div className="password-input-wrapper">
+                <input
+                  type={showRegisterConfirmPassword ? "text" : "password"}
+                  placeholder="Confirm password"
+                  className={`auth-input ${registerErrors.confirmPassword ? 'error' : ''}`}
+                  value={registerData.confirmPassword}
+                  onChange={(e) => {
+                    setRegisterData({ ...registerData, confirmPassword: e.target.value });
+                    setRegisterErrors(prev => ({ ...prev, confirmPassword: false }));
+                  }}
+                />
+                <button
+                  type="button"
+                  className="password-toggle"
+                  onClick={() => setShowRegisterConfirmPassword(!showRegisterConfirmPassword)}
+                  aria-label="Toggle password visibility"
+                >
+                  {showRegisterConfirmPassword ? (
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                      <line x1="1" y1="1" x2="23" y2="23"/>
+                    </svg>
+                  ) : (
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                      <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                  )}
+                </button>
+              </div>
 
               <button type="submit" className="auth-button">Register</button>
             </form>

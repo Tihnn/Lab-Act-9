@@ -33,6 +33,14 @@
   letter-spacing: 1px;
 }
 
+.logo-suffix {
+  margin-left: 8px;
+  color: #ff6b6b;
+  font-weight: 700;
+  font-style: normal;
+  font-size: 18px;
+}
+
 .nav-links {
   display: flex;
   gap: 30px;
@@ -62,23 +70,26 @@
   gap: 15px;
 }
 
-.user-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: white;
-  display: flex;
+/* Text-only account button */
+.account-button {
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
+  background: transparent;
+  border: none;
+  color: #fff;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
   font-weight: 700;
-  color: #333;
-  font-size: 18px;
-  cursor: default;
 }
 
-.user-icon.active {
-  background: #ff6b6b;
-  color: white;
+.account-button:hover {
+  color: #ff6b6b;
+}
+
+.account-text {
+  color: #fff;
+  font-size: 15px;
 }
 
 .logout-btn {
@@ -101,7 +112,7 @@
 /* Main Content */
 .profile-container {
   padding: 120px 40px 60px;
-  max-width: 800px;
+  max-width: 1100px;
   margin: 0 auto;
 }
 
@@ -117,6 +128,7 @@
   padding: 50px 40px;
   text-align: center;
   color: white;
+  display: none;
 }
 
 .profile-avatar {
@@ -124,7 +136,7 @@
   height: 120px;
   border-radius: 50%;
   background: white;
-  display: flex;
+  display: none;
   align-items: center;
   justify-content: center;
   font-size: 48px;
@@ -162,6 +174,14 @@
   color: #333;
 }
 
+.section-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 20px;
+  min-height: 28px;
+}
+
 .edit-btn {
   background: #667eea;
   color: white;
@@ -184,6 +204,20 @@
   display: flex;
   flex-direction: column;
   gap: 20px;
+  padding: 40px;
+}
+
+.form-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+  margin-bottom: 20px;
+}
+
+.form-column {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
 }
 
 .form-row {
@@ -195,6 +229,8 @@
 .form-group {
   display: flex;
   flex-direction: column;
+  margin-bottom: 20px;
+  height: 92px;
 }
 
 .form-group label {
@@ -202,6 +238,7 @@
   font-weight: 600;
   color: #333;
   margin-bottom: 8px;
+  height: 20px;
 }
 
 .form-group input {
@@ -226,6 +263,46 @@
 
 .form-group input.error {
   border-color: #ff4d4d;
+}
+
+.password-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.password-input-wrapper input {
+  flex: 1;
+  padding-right: 45px;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 12px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.6;
+  transition: opacity 0.3s;
+}
+
+.password-toggle svg {
+  width: 20px;
+  height: 20px;
+  color: #666;
+}
+
+.password-toggle:hover:not(:disabled) {
+  opacity: 1;
+}
+
+.password-toggle:disabled {
+  cursor: not-allowed;
+  opacity: 0.3;
 }
 
 .error-text {
@@ -338,6 +415,15 @@
 
   .profile-content {
     padding: 30px 20px;
+  }
+
+  .profile-form {
+    padding: 30px 20px;
+  }
+
+  .form-columns {
+    grid-template-columns: 1fr;
+    gap: 30px;
   }
 
   .form-row {

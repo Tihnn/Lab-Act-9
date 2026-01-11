@@ -44,7 +44,26 @@ function OrderConfirmationPage() {
       {/* Navigation */}
       <header className="navbar">
         <div className="navbar-container">
-          <div className="logo" onClick={() => navigate('/')}>PedalHub</div>
+          <div className="logo" onClick={() => navigate('/')}>
+            PedalHub
+            {(() => {
+              const userStr = localStorage.getItem('bikeshop_current_user_v1');
+              try {
+                const u = userStr ? JSON.parse(userStr) : null;
+                return u ? <span className="logo-suffix"> / {u.isAdmin ? 'Admin' : (u.email || 'User')}</span> : null;
+              } catch {
+                return null;
+              }
+            })()}
+          </div>
+          <div className="nav-actions">
+            <button className="account-button" onClick={() => navigate('/profile', { state: { edit: true } })}>
+              <span className="account-text">My Account</span>
+            </button>
+            <button className="logout-btn" onClick={() => { localStorage.removeItem('bikeshop_current_user_v1'); navigate('/login'); }}>
+              Logout
+            </button>
+          </div>
         </div>
       </header>
 

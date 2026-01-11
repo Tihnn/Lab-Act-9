@@ -33,11 +33,71 @@
   letter-spacing: 1px;
 }
 
+.logo-suffix {
+  margin-left: 8px;
+  color: #ff6b6b;
+  font-weight: 700;
+  font-style: normal;
+  font-size: 18px;
+}
+
 .nav-links {
   display: flex;
   gap: 40px;
   flex: 1;
   justify-content: center;
+}
+
+.category-dropdown {
+  position: relative;
+}
+
+.dropdown-toggle {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 600;
+  font-size: 14px;
+  letter-spacing: 1px;
+  cursor: pointer;
+  padding: 5px 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dropdown-toggle .caret {
+  margin-left: 6px;
+  transition: transform 0.15s ease;
+}
+
+.dropdown-toggle .caret.open {
+  transform: rotate(180deg);
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 36px;
+  left: 0;
+  background: #2D2D2D;
+  border-radius: 8px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+  padding: 8px 0;
+  min-width: 160px;
+  z-index: 1100;
+}
+
+.dropdown-menu li {
+  list-style: none;
+  color: #fff;
+  padding: 10px 16px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.dropdown-menu li:hover {
+  background: rgba(255,107,107,0.08);
+  color: #ff6b6b;
 }
 
 .nav-links a {
@@ -138,6 +198,30 @@
   letter-spacing: 0.5px;
 }
 
+/* Combined account button */
+.account-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: transparent;
+  border: none;
+  color: #fff;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.account-button:hover {
+  color: #ff6b6b;
+  background: transparent;
+}
+
+.account-text {
+  color: #ffffff;
+  font-size: 15px;
+}
+
 .logout-btn:hover, .login-btn:hover {
   background: #ff5252;
   transform: translateY(-1px);
@@ -149,7 +233,6 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background-image: url('https://images.unsplash.com/photo-1532298229144-0ec0c57515c7?w=1600&q=80');
   background-size: cover;
   background-position: center;
   position: relative;
