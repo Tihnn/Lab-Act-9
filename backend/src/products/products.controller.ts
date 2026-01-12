@@ -1,11 +1,14 @@
 import { Controller, Get, Post, Put, Delete, Body, Param, HttpException, HttpStatus } from '@nestjs/common';
+import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { ProductsService } from './products.service';
 
+@ApiTags('Products')
 @Controller('api/products')
 export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
 
   @Get()
+  @ApiOperation({ summary: 'Get all products' })
   async getAllProducts() {
     try {
       const products = await this.productsService.getAllProducts();
@@ -16,6 +19,7 @@ export class ProductsController {
   }
 
   @Post(':type')
+  @ApiOperation({ summary: 'Create a product by type' })
   async createProduct(@Param('type') type: string, @Body() productData: any) {
     try {
       const product = await this.productsService.createProduct(type, productData);
@@ -26,6 +30,7 @@ export class ProductsController {
   }
 
   @Put(':type/:id')
+  @ApiOperation({ summary: 'Update a product by type and id' })
   async updateProduct(
     @Param('type') type: string,
     @Param('id') id: number,
@@ -40,6 +45,7 @@ export class ProductsController {
   }
 
   @Delete(':type/:id')
+  @ApiOperation({ summary: 'Delete a product by type and id' })
   async deleteProduct(@Param('type') type: string, @Param('id') id: number) {
     try {
       const result = await this.productsService.deleteProduct(type, id);
@@ -50,6 +56,7 @@ export class ProductsController {
   }
 
   @Get(':type/:id')
+  @ApiOperation({ summary: 'Get a product by type and id' })
   async getProductById(@Param('type') type: string, @Param('id') id: number) {
     try {
       const product = await this.productsService.getProductById(type, id);

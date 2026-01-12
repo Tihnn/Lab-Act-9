@@ -28,6 +28,11 @@ npm run start:dev
 
 The backend will run on http://localhost:3001
 
+## Swagger Documentation
+
+- Visit http://localhost:3001/api-docs to explore interactive API docs
+- Try endpoints directly from the UI (requires backend running)
+
 ## Database Tables
 
 The backend will automatically create these tables in your `activity9_db` database:

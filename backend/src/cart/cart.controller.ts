@@ -1,11 +1,14 @@
 import { Controller, Get, Post, Put, Delete, Body, Param, HttpException, HttpStatus } from '@nestjs/common';
+import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { CartService } from './cart.service';
 
+@ApiTags('Cart')
 @Controller('api/cart')
 export class CartController {
   constructor(private readonly cartService: CartService) {}
 
   @Post('add')
+  @ApiOperation({ summary: 'Add item to cart' })
   async addToCart(
     @Body() cartData: { userId: number; productType: string; productId: number; quantity: number },
   ) {
@@ -23,6 +26,7 @@ export class CartController {
   }
 
   @Get(':userId')
+  @ApiOperation({ summary: 'Get cart items for user' })
   async getCart(@Param('userId') userId: number) {
     try {
       const cart = await this.cartService.getCart(userId);
@@ -33,6 +37,7 @@ export class CartController {
   }
 
   @Put(':cartItemId')
+  @ApiOperation({ summary: 'Update cart item quantity' })
   async updateCartItem(@Param('cartItemId') cartItemId: number, @Body() data: { quantity: number }) {
     try {
       const cartItem = await this.cartService.updateCartItem(cartItemId, data.quantity);
@@ -43,6 +48,7 @@ export class CartController {
   }
 
   @Delete(':cartItemId')
+  @ApiOperation({ summary: 'Remove item from cart' })
   async removeFromCart(@Param('cartItemId') cartItemId: number) {
     try {
       const result = await this.cartService.removeFromCart(cartItemId);
@@ -53,6 +59,7 @@ export class CartController {
   }
 
   @Delete('clear/:userId')
+  @ApiOperation({ summary: 'Clear cart for user' })
   async clearCart(@Param('userId') userId: number) {
     try {
       const result = await this.cartService.clearCart(userId);
@@ -63,6 +70,7 @@ export class CartController {
   }
 
   @Post('remove-items')
+  @ApiOperation({ summary: 'Remove multiple cart items' })
   async removeCartItems(@Body() data: { cartItemIds: number[] }) {
     try {
       const result = await this.cartService.removeCartItems(data.cartItemIds);

@@ -1,11 +1,14 @@
 import { Controller, Post, Get, Put, Body, Param, HttpException, HttpStatus } from '@nestjs/common';
+import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { UsersService } from './users.service';
 
+@ApiTags('Users')
 @Controller('api/users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Post('register')
+  @ApiOperation({ summary: 'Register a new user' })
   async register(@Body() userData: any) {
     try {
       const user = await this.usersService.register(userData);
@@ -16,6 +19,7 @@ export class UsersController {
   }
 
   @Post('login')
+  @ApiOperation({ summary: 'Login with credentials' })
   async login(@Body() credentials: { email: string; password: string }) {
     try {
       const user = await this.usersService.login(credentials.email, credentials.password);
@@ -26,6 +30,7 @@ export class UsersController {
   }
 
   @Put(':id')
+  @ApiOperation({ summary: 'Update user profile' })
   async updateProfile(@Param('id') id: number, @Body() updateData: any) {
     try {
       const user = await this.usersService.updateProfile(id, updateData);
@@ -36,6 +41,7 @@ export class UsersController {
   }
 
   @Get(':id')
+  @ApiOperation({ summary: 'Get user by id' })
   async getUser(@Param('id') id: number) {
     try {
       const user = await this.usersService.getUserById(id);
