@@ -169,7 +169,6 @@ function CartPage() {
 
   const user = getUserInfo();
   const isAdmin = user?.isAdmin || false;
-  const userInitial = user?.firstName ? user.firstName.charAt(0).toUpperCase() : '';
 
   if (loading) {
     return <div className="cart-page"><div className="loading">Loading cart...</div></div>;

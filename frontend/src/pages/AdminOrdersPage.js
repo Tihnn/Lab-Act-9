@@ -31,6 +31,7 @@ function AdminOrdersPage() {
     }
 
     loadOrders();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navigate]);
 
   const loadOrders = async () => {
@@ -61,12 +62,6 @@ function AdminOrdersPage() {
       // Show only pending orders in 'all' view
       setFilteredOrders(ordersList.filter(order => order.status === 'pending'));
     }
-  };
-
-  const handleFilterChange = (e) => {
-    const filter = e.target.value;
-    setReceivedFilter(filter);
-    applyFilter(orders, filter);
   };
 
   const handleLogout = () => {

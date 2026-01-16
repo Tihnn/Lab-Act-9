@@ -51,6 +51,7 @@ function MyPurchasePage() {
 
   useEffect(() => {
     filterOrders();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedTab, orders]);
 
   const loadOrders = async () => {

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getCart, createOrder, clearCart, removeCartItems } from '../services/api';
+import { createOrder, removeCartItems } from '../services/api';
 import NotificationPanel from '../components/NotificationPanel';
 import './CheckoutPage.css';
 
@@ -42,10 +42,6 @@ function CheckoutPage() {
     }
   };
 
-  const stripPhoneFormatting = (phone) => {
-    return phone.replace(/\D/g, '');
-  };
-
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (accountDropdownOpen && !event.target.closest('.account-dropdown')) {
@@ -74,6 +70,7 @@ function CheckoutPage() {
         console.error('Error parsing user data:', error);
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadCart = async () => {
@@ -174,7 +171,6 @@ function CheckoutPage() {
 
   const user = getUserInfo();
   const isAdmin = user?.isAdmin || false;
-  const userInitial = user?.firstName ? user.firstName.charAt(0).toUpperCase() : '';
 
   if (loading) {
     return <div className="checkout-page"><div className="loading">Loading...</div></div>;
