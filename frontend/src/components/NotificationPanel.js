@@ -21,7 +21,7 @@ function NotificationPanel({ userId, userType }) {
       
       return () => clearInterval(interval);
     }
-  }, [userId]);
+  }, [userId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     const handleClickOutside = (event) => {

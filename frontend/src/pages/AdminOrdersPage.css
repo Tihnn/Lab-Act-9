@@ -565,6 +565,16 @@
   border-radius: 8px;
 }
 
+.item-row-image {
+  width: 64px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: 8px;
+  background: #eaeaea;
+  margin-right: 12px;
+  flex-shrink: 0;
+}
+
 .item-details {
   display: flex;
   flex-direction: column;

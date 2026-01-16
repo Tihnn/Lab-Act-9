@@ -54,8 +54,6 @@ function AdminOrdersPage() {
       setFilteredOrders(ordersList.filter(order => order.status === 'delivered'));
     } else if (filter === 'not-received') {
       setFilteredOrders(ordersList.filter(order => order.status === 'ship'));
-    } else if (filter === 'cancellation-requests') {
-      setFilteredOrders(ordersList.filter(order => order.cancellationRequested === true));
     } else if (filter === 'cancelled') {
       setFilteredOrders(ordersList.filter(order => order.status === 'cancelled'));
     } else {
@@ -93,6 +91,13 @@ function AdminOrdersPage() {
       hour: '2-digit',
       minute: '2-digit'
     });
+  };
+
+  const normalizeImageSrc = (url) => {
+    const placeholder = 'https://via.placeholder.com/100';
+    if (!url) return placeholder;
+    if (url.startsWith('/')) return `http://localhost:3001${url}`;
+    return url;
   };
 
   const handleViewOrder = (order) => {
@@ -139,21 +144,6 @@ function AdminOrdersPage() {
     } catch (error) {
       console.error('Error deleting order:', error);
       alert('Failed to delete order');
-    }
-  };
-
-  const handleConfirmCancellation = async (orderId) => {
-    if (!window.confirm('Are you sure you want to confirm this cancellation request?')) {
-      return;
-    }
-    try {
-      await axios.put(`http://localhost:3001/api/orders/${orderId}/confirm-cancellation`);
-      // Reload orders after confirmation
-      await loadOrders();
-      alert('Cancellation confirmed successfully');
-    } catch (error) {
-      console.error('Error confirming cancellation:', error);
-      alert('Failed to confirm cancellation');
     }
   };
 
@@ -212,18 +202,7 @@ function AdminOrdersPage() {
           >
             Not Received
           </button>
-          <button 
-            className={`tab ${receivedFilter === 'cancellation-requests' ? 'active' : ''}`}
-            onClick={() => {
-              setReceivedFilter('cancellation-requests');
-              applyFilter(orders, 'cancellation-requests');
-            }}
-          >
-            Cancellation Requests
-            {orders.filter(o => o.cancellationRequested).length > 0 && (
-              <span className="tab-badge">{orders.filter(o => o.cancellationRequested).length}</span>
-            )}
-          </button>
+          {/* Cancellation Requests tab removed - admin cancels directly from orders list */}
           <button 
             className={`tab ${receivedFilter === 'cancelled' ? 'active' : ''}`}
             onClick={() => {
@@ -255,9 +234,7 @@ function AdminOrdersPage() {
                     <th>Phone</th>
                     <th>Date</th>
                     <th>Total Amount</th>
-                    {receivedFilter === 'cancellation-requests' ? (
-                      <th>Cancellation Reason</th>
-                    ) : receivedFilter === 'cancelled' ? (
+                    {receivedFilter === 'cancelled' ? (
                       <th>Cancellation Reason</th>
                     ) : (
                       <th>Status</th>
@@ -279,8 +256,6 @@ function AdminOrdersPage() {
                           <span className="status-text status-delivered">Received</span>
                         ) : receivedFilter === 'not-received' ? (
                           <span className="status-text status-shipped">Ship</span>
-                        ) : receivedFilter === 'cancellation-requests' ? (
-                          <span className="cancellation-reason">{order.cancellationReason || 'No reason provided'}</span>
                         ) : receivedFilter === 'cancelled' ? (
                           <span className="cancellation-reason">{order.cancellationReason || 'No reason provided'}</span>
                         ) : order.status === 'cancelled' ? (
@@ -300,11 +275,7 @@ function AdminOrdersPage() {
                         )}
                       </td>
                       <td>
-                        {receivedFilter === 'cancellation-requests' ? (
-                          <button className="btn-confirm" onClick={() => handleConfirmCancellation(order.id)}>
-                            Confirm Cancellation
-                          </button>
-                        ) : receivedFilter === 'cancelled' ? (
+                        {receivedFilter === 'cancelled' ? (
                           <button className="btn-view" onClick={() => handleViewOrder(order)}>
                             View Details
                           </button>
@@ -397,6 +368,16 @@ function AdminOrdersPage() {
                 <div className="items-list">
                   {selectedOrder.items && selectedOrder.items.map((item, index) => (
                     <div key={index} className="item-row">
+                      {item.imageUrl ? (
+                        <img
+                          className="item-row-image"
+                          src={normalizeImageSrc(item.imageUrl)}
+                          alt={item.productName}
+                          onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = 'https://via.placeholder.com/100'; }}
+                        />
+                      ) : (
+                        <div className="item-row-image item-image-placeholder" />
+                      )}
                       <div className="item-details">
                         <span className="item-name">{item.productName}</span>
                         <span className="item-qty">Qty: {item.quantity}</span>

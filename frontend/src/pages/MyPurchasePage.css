@@ -321,6 +321,31 @@
   background: #e0e0e0;
 }
 
+.item-image-placeholder {
+  width: 60px;
+  height: 60px;
+  background: linear-gradient(135deg,#ececec,#dcdcdc);
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+.item-row {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.item-row-image {
+  width: 64px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: 8px;
+  background: #eaeaea;
+  flex-shrink: 0;
+}
+
 .item-info {
   display: flex;
   flex-direction: column;

@@ -58,7 +58,7 @@ function ProductsPage() {
     const params = new URLSearchParams(location.search);
     const cat = params.get('category');
     if (cat) setSelectedCategory(cat);
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadProducts = async () => {
     try {
@@ -107,7 +107,6 @@ function ProductsPage() {
 
   const user = getUserInfo();
   const isAdmin = user?.isAdmin || false;
-  const userInitial = user?.firstName ? user.firstName.charAt(0).toUpperCase() : '';
 
   const handleAddToCart = async (product, type) => {
     try {

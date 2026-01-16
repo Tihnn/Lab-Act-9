@@ -139,6 +139,14 @@ function MyPurchasePage() {
     });
   };
 
+  const normalizeImageSrc = (url) => {
+    const placeholder = 'https://via.placeholder.com/100';
+    if (!url) return placeholder;
+    // If it's a relative path, prepend backend origin
+    if (url.startsWith('/')) return `http://localhost:3001${url}`;
+    return url;
+  };
+
   const getStatusBadge = (status) => {
     const statusConfig = {
       pending: { label: 'Pending', className: 'status-pending' },
@@ -186,7 +194,7 @@ function MyPurchasePage() {
       return;
     }
     try {
-      await axios.put(`http://localhost:3001/api/orders/${cancelOrderId}/request-cancellation`, {
+      const resp = await axios.put(`http://localhost:3001/api/orders/${cancelOrderId}/request-cancellation`, {
         reason: cancellationReason
       });
       // Reload orders to reflect the change
@@ -194,7 +202,12 @@ function MyPurchasePage() {
       setShowCancelModal(false);
       setCancellationReason('');
       setCancelOrderId(null);
-      alert('Cancellation request submitted successfully. Admin will review your request.');
+      const updatedOrder = resp.data?.data;
+      if (updatedOrder && updatedOrder.status === 'cancelled') {
+        alert('Order cancelled successfully');
+      } else {
+        alert('Cancellation request submitted successfully. Admin will review your request.');
+      }
     } catch (error) {
       console.error('Error requesting cancellation:', error);
       alert('Failed to request cancellation');
@@ -314,6 +327,15 @@ function MyPurchasePage() {
                   <div className="order-items">
                     {order.items && order.items.map((item, index) => (
                       <div key={index} className="order-item">
+                        {item.imageUrl ? (
+                          <img
+                            src={normalizeImageSrc(item.imageUrl)}
+                            alt={item.productName}
+                            onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = 'https://via.placeholder.com/100'; }}
+                          />
+                        ) : (
+                          <div className="item-image-placeholder" />
+                        )}
                         <div className="item-info">
                           <div className="item-name">{item.productName}</div>
                           <div className="item-qty">Qty: {item.quantity}</div>
@@ -428,6 +450,16 @@ function MyPurchasePage() {
                 <div className="items-list">
                   {selectedOrder.items && selectedOrder.items.map((item, index) => (
                     <div key={index} className="item-row">
+                      {item.imageUrl ? (
+                        <img
+                          className="item-row-image"
+                          src={normalizeImageSrc(item.imageUrl)}
+                          alt={item.productName}
+                          onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = 'https://via.placeholder.com/100'; }}
+                        />
+                      ) : (
+                        <div className="item-row-image item-image-placeholder" />
+                      )}
                       <div className="item-details">
                         <span className="item-name">{item.productName}</span>
                         <span className="item-qty">Qty: {item.quantity}</span>
@@ -454,7 +486,7 @@ function MyPurchasePage() {
         <div className="modal-overlay" onClick={closeCancelModal}>
           <div className="modal-content cancel-modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h2>Request Order Cancellation</h2>
+              <h2>Reason for Order Cancellation</h2>
               <button className="close-btn" onClick={closeCancelModal}>×</button>
             </div>
             <div className="modal-body">
@@ -469,7 +501,7 @@ function MyPurchasePage() {
             </div>
             <div className="modal-footer">
               <button className="btn-cancel-action" onClick={closeCancelModal}>Close</button>
-              <button className="btn-submit-cancellation" onClick={submitCancellationRequest}>Submit Request</button>
+              <button className="btn-submit-cancellation" onClick={submitCancellationRequest}>Cancel Order</button>
             </div>
           </div>
         </div>

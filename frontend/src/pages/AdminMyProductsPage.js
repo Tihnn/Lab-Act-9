@@ -40,7 +40,7 @@ function AdminMyProductsPage() {
     }
 
     loadProducts();
-  }, [navigate, activeCategory]);
+  }, [navigate, activeCategory]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadProducts = async () => {
     try {
@@ -124,16 +124,6 @@ function AdminMyProductsPage() {
         setToastPosition('center');
       }
     }
-  };
-
-  const getCategoryType = (category) => {
-    const types = {
-      'bicycles': 'bicycle',
-      'parts': 'part',
-      'accessories': 'accessory',
-      'clothing': 'clothing'
-    };
-    return types[category];
   };
 
   return (

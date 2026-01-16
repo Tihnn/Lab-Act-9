@@ -26,7 +26,7 @@ function OrderConfirmationPage() {
   useEffect(() => {
     loadOrder();
     updateCartCount();
-  }, [orderId]);
+  }, [orderId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadOrder = async () => {
     try {

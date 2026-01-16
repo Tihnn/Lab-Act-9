@@ -7,7 +7,6 @@ import Toast from '../components/Toast';
 
 function ProfilePage() {
   const navigate = useNavigate();
-  const location = useLocation();
   const [isEditing, setIsEditing] = useState(false);
   const [cartCount, setCartCount] = useState(0);
   const [formData, setFormData] = useState({

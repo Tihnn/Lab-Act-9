@@ -23,6 +23,41 @@ export class OrdersService {
     private statusService: StatusService,
   ) {}
 
+  private async attachProductImagesToOrder(order: Order) {
+    if (!order || !order.items) return order;
+    for (const item of order.items) {
+      try {
+        let repository;
+        switch ((item.productType || '').toLowerCase()) {
+          case 'bicycle':
+            repository = this.bicycleRepository;
+            break;
+          case 'part':
+            repository = this.partRepository;
+            break;
+          case 'accessory':
+            repository = this.accessoryRepository;
+            break;
+          case 'clothing':
+            repository = this.clothingRepository;
+            break;
+          default:
+            repository = undefined;
+        }
+
+        if (repository) {
+          const product = await repository.findOne({ where: { id: item.productId } });
+          if (product && product.imageUrl) {
+            item.imageUrl = product.imageUrl;
+          }
+        }
+      } catch (err) {
+        // ignore and continue
+      }
+    }
+    return order;
+  }
+
   async createOrder(orderData: any) {
     const order = this.orderRepository.create({
       userId: orderData.userId,
@@ -62,32 +97,36 @@ export class OrdersService {
       isRead: false,
     });
 
-    return await this.orderRepository.findOne({
+    const created = await this.orderRepository.findOne({
       where: { id: savedOrder.id },
       relations: ['items'],
     });
+    return await this.attachProductImagesToOrder(created);
   }
 
   async getOrdersByUser(userId: number) {
-    return await this.orderRepository.find({
+    const orders = await this.orderRepository.find({
       where: { userId },
       relations: ['items'],
       order: { createdAt: 'DESC' },
     });
+    return await Promise.all(orders.map(o => this.attachProductImagesToOrder(o)));
   }
 
   async getAllOrders() {
-    return await this.orderRepository.find({
+    const orders = await this.orderRepository.find({
       relations: ['items', 'user'],
       order: { createdAt: 'DESC' },
     });
+    return await Promise.all(orders.map(o => this.attachProductImagesToOrder(o)));
   }
 
   async getOrderById(orderId: number) {
-    return await this.orderRepository.findOne({
+    const order = await this.orderRepository.findOne({
       where: { id: orderId },
       relations: ['items'],
     });
+    return await this.attachProductImagesToOrder(order);
   }
 
   async updateOrderStatus(orderId: number, status: string) {
@@ -189,10 +228,11 @@ export class OrdersService {
       }
     }
 
-    return await this.orderRepository.findOne({
+    const updated = await this.orderRepository.findOne({
       where: { id: orderId },
       relations: ['items'],
     });
+    return await this.attachProductImagesToOrder(updated);
   }
 
   async deleteOrder(orderId: number) {
@@ -211,11 +251,47 @@ export class OrdersService {
     if (!order) {
       throw new Error('Order not found');
     }
+    // If order has not been shipped or delivered yet, immediately cancel it
+    if (order.status !== 'ship' && order.status !== 'delivered') {
+      const previousStatus = order.status;
 
-    // Update order to mark cancellation requested with reason
-    await this.orderRepository.update(orderId, { 
+      await this.orderRepository.update(orderId, {
+        status: 'cancelled',
+        cancellationRequested: false,
+        cancellationReason: reason || 'No reason provided',
+      });
+
+      // Notify admin about cancellation (user-initiated)
+      await this.statusService.create({
+        userId: 1,
+        userType: 'admin',
+        action: 'order_cancel_request',
+        description: `Order #${orderId} cancellation requested by ${order.customerName}`,
+        isRead: false,
+      });
+
+      // Notify user that order was cancelled
+      if (order.userId) {
+        await this.statusService.create({
+          userId: order.userId,
+          userType: 'user',
+          action: 'order_cancelled',
+          description: `Your order #${orderId} has been cancelled`,
+          isRead: false,
+        });
+      }
+
+      const after = await this.orderRepository.findOne({
+        where: { id: orderId },
+        relations: ['items'],
+      });
+      return await this.attachProductImagesToOrder(after);
+    }
+
+    // Otherwise mark as cancellation requested so admin can confirm
+    await this.orderRepository.update(orderId, {
       cancellationRequested: true,
-      cancellationReason: reason || 'No reason provided'
+      cancellationReason: reason || 'No reason provided',
     });
 
     // Notify admin about cancellation request
@@ -227,10 +303,11 @@ export class OrdersService {
       isRead: false,
     });
 
-    return await this.orderRepository.findOne({
+    const result = await this.orderRepository.findOne({
       where: { id: orderId },
       relations: ['items'],
     });
+    return await this.attachProductImagesToOrder(result);
   }
 
   async confirmCancellation(orderId: number) {
@@ -293,9 +370,10 @@ export class OrdersService {
       });
     }
 
-    return await this.orderRepository.findOne({
+    const final = await this.orderRepository.findOne({
       where: { id: orderId },
       relations: ['items'],
     });
+    return await this.attachProductImagesToOrder(final);
   }
 }

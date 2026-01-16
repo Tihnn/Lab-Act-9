@@ -82,7 +82,6 @@ function LandingPage() {
   const user = getUserInfo();
   const isLoggedIn = !!user;
   const isAdmin = user?.isAdmin || false;
-  const userInitial = user?.firstName ? user.firstName.charAt(0).toUpperCase() : '';
 
   return (
     <div className="landing-page">
