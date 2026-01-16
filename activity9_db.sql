@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jan 16, 2026 at 09:51 AM
+-- Generation Time: Jan 16, 2026 at 11:22 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -152,6 +152,13 @@ CREATE TABLE `orders` (
   `cancellationReason` text DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `orders`
+--
+
+INSERT INTO `orders` (`id`, `userId`, `customerName`, `email`, `phone`, `city`, `country`, `totalAmount`, `status`, `paymentMethod`, `createdAt`, `customerEmail`, `customerPhone`, `shippingAddress`, `postalCode`, `address`, `cancellationRequested`, `cancellationReason`) VALUES
+(93, 15, 'martin valentino', NULL, NULL, NULL, NULL, 15000.00, 'pending', 'cod', '2026-01-16 16:57:36.996870', 'martin@gmail.com', '63+ 099-999-4848', 'Bacoor Cavite', '4102', NULL, 0, NULL);
+
 -- --------------------------------------------------------
 
 --
@@ -168,6 +175,13 @@ CREATE TABLE `order_items` (
   `quantity` int(11) NOT NULL,
   `imageUrl` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `order_items`
+--
+
+INSERT INTO `order_items` (`id`, `orderId`, `productId`, `productType`, `productName`, `price`, `quantity`, `imageUrl`) VALUES
+(118, 93, 3, 'bicycle', 'Mountainpeak Bross', 15000.00, 1, 'data:image/webp;base64,UklGRhBIAwBXRUJQVlA4WAoAAAA4AAAAUAMA6gEASUNDUEQMAAAAAAxEVUNDTQJAAABtbnRyUkdCIFhZWiAH0wAEAAQAAAAAAABhY3NwTVNGVAAAAABDQU5PWjAwOQAAAAAAAAAAAAAAAAAA9tYAAQAAAADTLUNBTk8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA5yVFJD');
 
 -- --------------------------------------------------------
 
@@ -211,6 +225,13 @@ CREATE TABLE `status` (
   `createdAt` datetime(6) NOT NULL DEFAULT current_timestamp(6),
   `updatedAt` datetime(6) NOT NULL DEFAULT current_timestamp(6) ON UPDATE current_timestamp(6)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `status`
+--
+
+INSERT INTO `status` (`id`, `userId`, `userType`, `action`, `description`, `isRead`, `createdAt`, `updatedAt`) VALUES
+(123, 1, 'admin', 'order_placed', 'New order #93 placed by martin valentino', 0, '2026-01-16 16:57:37.081505', '2026-01-16 16:57:37.081505');
 
 -- --------------------------------------------------------
 
@@ -338,13 +359,13 @@ ALTER TABLE `clothing`
 -- AUTO_INCREMENT for table `orders`
 --
 ALTER TABLE `orders`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=93;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=94;
 
 --
 -- AUTO_INCREMENT for table `order_items`
 --
 ALTER TABLE `order_items`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=118;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=119;
 
 --
 -- AUTO_INCREMENT for table `parts`
@@ -356,7 +377,7 @@ ALTER TABLE `parts`
 -- AUTO_INCREMENT for table `status`
 --
 ALTER TABLE `status`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=123;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=124;
 
 --
 -- AUTO_INCREMENT for table `users`

@@ -184,6 +184,24 @@
   padding-right: 45px;
 }
 
+/* Hide browser's native password visibility toggle */
+.password-input-wrapper .auth-input::-webkit-outer-spin-button,
+.password-input-wrapper .auth-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.password-input-wrapper .auth-input::-webkit-credentials-auto-fill-button {
+  visibility: hidden;
+  position: absolute;
+  right: 0;
+}
+
+/* For Edge and IE */
+.password-input-wrapper .auth-input::-ms-reveal {
+  display: none;
+}
+
 .auth-input:focus {
   outline: none;
   border-color: #333;
