@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import NotificationPanel from '../components/NotificationPanel';
 import './AdminMyProductsPage.css';
 import Toast from '../components/Toast';
 
@@ -144,11 +145,13 @@ function AdminMyProductsPage() {
             PedalHub <span style={{ color: '#ff6b6b' }}>/ Admin</span>
           </div>
           <nav className="nav-links">
+            <button onClick={() => navigate('/admin/dashboard')}>HOME</button>
             <button onClick={() => navigate('/admin/dashboard')}>DASHBOARD</button>
             <button className="active" onClick={() => navigate('/admin/products')}>MY PRODUCTS</button>
             <button onClick={() => navigate('/admin/orders')}>ORDERS</button>
           </nav>
           <div className="nav-actions">
+            <NotificationPanel userId={1} userType="admin" />
             <div className="user-icon no-click">{userInitial}</div>
             <button className="logout-btn" onClick={handleLogout}>Logout</button>
           </div>

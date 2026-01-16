@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import axios from 'axios';
 import { getOrderById } from '../services/api';
+import NotificationPanel from '../components/NotificationPanel';
 import './OrderConfirmationPage.css';
 
 function OrderConfirmationPage() {
@@ -8,9 +10,22 @@ function OrderConfirmationPage() {
   const { orderId } = useParams();
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [accountDropdownOpen, setAccountDropdownOpen] = useState(false);
+  const [cartCount, setCartCount] = useState(0);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (accountDropdownOpen && !event.target.closest('.account-dropdown')) {
+        setAccountDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [accountDropdownOpen]);
 
   useEffect(() => {
     loadOrder();
+    updateCartCount();
   }, [orderId]);
 
   const loadOrder = async () => {
@@ -21,6 +36,23 @@ function OrderConfirmationPage() {
     } catch (error) {
       console.error('Error loading order:', error);
       setLoading(false);
+    }
+  };
+
+  const updateCartCount = async () => {
+    try {
+      const userStr = localStorage.getItem('bikeshop_current_user_v1');
+      if (!userStr) {
+        setCartCount(0);
+        return;
+      }
+      const user = JSON.parse(userStr);
+      const response = await axios.get(`http://localhost:3001/api/cart/${user.id}`);
+      const items = response.data.data || [];
+      setCartCount(items.length);
+    } catch (error) {
+      console.error('Error fetching cart count:', error);
+      setCartCount(0);
     }
   };
 
@@ -39,6 +71,20 @@ function OrderConfirmationPage() {
     );
   }
 
+  const getUserInfo = () => {
+    const userStr = localStorage.getItem('bikeshop_current_user_v1');
+    if (userStr) {
+      try {
+        return JSON.parse(userStr);
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  };
+
+  const user = getUserInfo();
+
   return (
     <div className="confirmation-page">
       {/* Navigation */}
@@ -56,10 +102,35 @@ function OrderConfirmationPage() {
               }
             })()}
           </div>
+          <nav className="nav-links">
+            <button onClick={() => navigate('/home')}>HOME</button>
+            <button onClick={() => navigate('/products')}>CONTINUE SHOPPING</button>
+          </nav>
           <div className="nav-actions">
-            <button className="account-button" onClick={() => navigate('/profile', { state: { edit: true } })}>
-              <span className="account-text">My Account</span>
-            </button>
+            <div className="cart-icon" onClick={() => navigate('/cart')}>
+              🛒
+              {cartCount > 0 && <span className="cart-count">{cartCount}</span>}
+            </div>
+            <NotificationPanel userId={user?.id} userType="user" />
+            <div className="account-dropdown">
+              <button 
+                className="account-button" 
+                onClick={() => setAccountDropdownOpen(!accountDropdownOpen)}
+              >
+                <span className="account-text">My Account</span>
+                <span className={`caret ${accountDropdownOpen ? 'open' : ''}`}>▾</span>
+              </button>
+              {accountDropdownOpen && (
+                <ul className="account-dropdown-menu">
+                  <li onClick={() => { navigate('/profile', { state: { edit: true } }); setAccountDropdownOpen(false); }}>
+                    Profile
+                  </li>
+                  <li onClick={() => { navigate('/my-purchase'); setAccountDropdownOpen(false); }}>
+                    My Purchase
+                  </li>
+                </ul>
+              )}
+            </div>
             <button className="logout-btn" onClick={() => { localStorage.removeItem('bikeshop_current_user_v1'); navigate('/login'); }}>
               Logout
             </button>
@@ -133,15 +204,6 @@ function OrderConfirmationPage() {
               ))}
             </div>
           </div>
-        </div>
-
-        <div className="action-buttons">
-          <button className="primary-btn" onClick={() => navigate('/products')}>
-            Continue Shopping
-          </button>
-          <button className="secondary-btn" onClick={() => navigate('/')}>
-            Return to Home
-          </button>
         </div>
       </main>
     </div>

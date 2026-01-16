@@ -72,4 +72,26 @@ export class OrdersController {
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
     }
   }
+
+  @Put(':orderId/request-cancellation')
+  @ApiOperation({ summary: 'Request order cancellation' })
+  async requestCancellation(@Param('orderId') orderId: number, @Body() data: { reason?: string }) {
+    try {
+      const order = await this.ordersService.requestCancellation(orderId, data.reason);
+      return { success: true, data: order };
+    } catch (error) {
+      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+    }
+  }
+
+  @Put(':orderId/confirm-cancellation')
+  @ApiOperation({ summary: 'Confirm order cancellation' })
+  async confirmCancellation(@Param('orderId') orderId: number) {
+    try {
+      const order = await this.ordersService.confirmCancellation(orderId);
+      return { success: true, data: order };
+    } catch (error) {
+      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+    }
+  }
 }

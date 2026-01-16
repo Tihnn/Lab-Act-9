@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
+import NotificationPanel from '../components/NotificationPanel';
 import './ProfilePage.css';
 import Toast from '../components/Toast';
 
@@ -28,6 +29,7 @@ function ProfilePage() {
   const [toastSubtitle, setToastSubtitle] = useState('');
   const [toastIcon, setToastIcon] = useState(null);
   const [toastType, setToastType] = useState('success');
+  const [accountDropdownOpen, setAccountDropdownOpen] = useState(false);
 
   const formatPhoneNumber = (value) => {
     // Remove all non-digits
@@ -55,6 +57,16 @@ function ProfilePage() {
     // Remove all non-digits from phone number for database storage
     return phone.replace(/\D/g, '');
   };
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (accountDropdownOpen && !event.target.closest('.account-dropdown')) {
+        setAccountDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [accountDropdownOpen]);
 
   const updateCartCount = async () => {
     try {
@@ -277,9 +289,26 @@ function ProfilePage() {
             </div>
           </nav>
           <div className="nav-actions">
-            <button className="account-button" onClick={() => navigate('/profile')}>
-              <span className="account-text">My Account</span>
-            </button>
+            <NotificationPanel userId={user?.id} userType="user" />
+            <div className="account-dropdown">
+              <button 
+                className="account-button" 
+                onClick={() => setAccountDropdownOpen(!accountDropdownOpen)}
+              >
+                <span className="account-text">My Account</span>
+                <span className={`caret ${accountDropdownOpen ? 'open' : ''}`}>▾</span>
+              </button>
+              {accountDropdownOpen && (
+                <ul className="account-dropdown-menu">
+                  <li className="active" onClick={() => { navigate('/profile'); setAccountDropdownOpen(false); }}>
+                    Profile
+                  </li>
+                  <li onClick={() => { navigate('/my-purchase'); setAccountDropdownOpen(false); }}>
+                    My Purchase
+                  </li>
+                </ul>
+              )}
+            </div>
             <button className="logout-btn" onClick={handleLogout}>Logout</button>
           </div>
         </div>

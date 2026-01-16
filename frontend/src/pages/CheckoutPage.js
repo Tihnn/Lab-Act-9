@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getCart, createOrder, clearCart, removeCartItems } from '../services/api';
+import NotificationPanel from '../components/NotificationPanel';
 import './CheckoutPage.css';
 
 function CheckoutPage() {
@@ -9,12 +10,14 @@ function CheckoutPage() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [isEditingShipping, setIsEditingShipping] = useState(false);
+  const [accountDropdownOpen, setAccountDropdownOpen] = useState(false);
   const [formData, setFormData] = useState({
     customerName: '',
     customerEmail: '',
     customerPhone: '',
     shippingAddress: '',
     postalCode: '',
+    paymentMethod: '',
   });
 
   const formatPhoneNumber = (value) => {
@@ -42,6 +45,16 @@ function CheckoutPage() {
   const stripPhoneFormatting = (phone) => {
     return phone.replace(/\D/g, '');
   };
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (accountDropdownOpen && !event.target.closest('.account-dropdown')) {
+        setAccountDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [accountDropdownOpen]);
 
   useEffect(() => {
     loadCart();
@@ -101,6 +114,11 @@ function CheckoutPage() {
     
     if (cartItems.length === 0) {
       alert('Your cart is empty!');
+      return;
+    }
+
+    if (!formData.paymentMethod) {
+      alert('Please select a payment method before placing your order.');
       return;
     }
 
@@ -175,12 +193,32 @@ function CheckoutPage() {
           </div>
           <nav className="nav-links">
             <button onClick={() => navigate('/home')}>HOME</button>
-            <button onClick={() => navigate('/cart')}>BACK TO CART</button>
+            <button onClick={() => navigate('/products')}>CONTINUE SHOPPING</button>
           </nav>
           <div className="nav-actions">
-            <button className="account-button" onClick={() => navigate('/profile', { state: { edit: true } })}>
-              <span className="account-text">My Account</span>
-            </button>
+            <div className="cart-icon" onClick={() => navigate('/cart')}>
+              🛒
+            </div>
+            <NotificationPanel userId={user?.id} userType="user" />
+            <div className="account-dropdown">
+              <button 
+                className="account-button" 
+                onClick={() => setAccountDropdownOpen(!accountDropdownOpen)}
+              >
+                <span className="account-text">My Account</span>
+                <span className={`caret ${accountDropdownOpen ? 'open' : ''}`}>▾</span>
+              </button>
+              {accountDropdownOpen && (
+                <ul className="account-dropdown-menu">
+                  <li onClick={() => { navigate('/profile', { state: { edit: true } }); setAccountDropdownOpen(false); }}>
+                    Profile
+                  </li>
+                  <li onClick={() => { navigate('/my-purchase'); setAccountDropdownOpen(false); }}>
+                    My Purchase
+                  </li>
+                </ul>
+              )}
+            </div>
             <button className="logout-btn" onClick={handleLogout}>Logout</button>
           </div>
         </div>
@@ -268,6 +306,64 @@ function CheckoutPage() {
                   placeholder="12345"
                   disabled={!isEditingShipping}
                 />
+              </div>
+
+              <div className="payment-method-section">
+                <h2>Payment Method</h2>
+                <p className="payment-subtitle">Select your preferred payment method *</p>
+                
+                <div className="payment-options">
+                  <label className={`payment-option ${formData.paymentMethod === 'ewallet' ? 'selected' : ''}`}>
+                    <input
+                      type="radio"
+                      name="paymentMethod"
+                      value="ewallet"
+                      checked={formData.paymentMethod === 'ewallet'}
+                      onChange={handleInputChange}
+                    />
+                    <div className="payment-content">
+                      <span className="payment-icon">{'\uD83D\uDCF1'}</span>
+                      <div className="payment-info">
+                        <span className="payment-title">Payment Center / E-Wallet</span>
+                        <span className="payment-desc">Pay via GCash, PayMaya, or other e-wallets</span>
+                      </div>
+                    </div>
+                  </label>
+
+                  <label className={`payment-option ${formData.paymentMethod === 'card' ? 'selected' : ''}`}>
+                    <input
+                      type="radio"
+                      name="paymentMethod"
+                      value="card"
+                      checked={formData.paymentMethod === 'card'}
+                      onChange={handleInputChange}
+                    />
+                    <div className="payment-content">
+                      <span className="payment-icon">💳</span>
+                      <div className="payment-info">
+                        <span className="payment-title">Credit / Debit Card</span>
+                        <span className="payment-desc">Pay securely with your card</span>
+                      </div>
+                    </div>
+                  </label>
+
+                  <label className={`payment-option ${formData.paymentMethod === 'cod' ? 'selected' : ''}`}>
+                    <input
+                      type="radio"
+                      name="paymentMethod"
+                      value="cod"
+                      checked={formData.paymentMethod === 'cod'}
+                      onChange={handleInputChange}
+                    />
+                    <div className="payment-content">
+                      <span className="payment-icon">💵</span>
+                      <div className="payment-info">
+                        <span className="payment-title">Cash on Delivery</span>
+                        <span className="payment-desc">Pay when you receive your order</span>
+                      </div>
+                    </div>
+                  </label>
+                </div>
               </div>
 
               <button type="submit" className="submit-order-btn" disabled={submitting}>

@@ -11,22 +11,36 @@ import AdminDashboardPage from './pages/AdminDashboardPage';
 import AdminMyProductsPage from './pages/AdminMyProductsPage';
 import AdminOrdersPage from './pages/AdminOrdersPage';
 import ProfilePage from './pages/ProfilePage';
+import MyPurchasePage from './pages/MyPurchasePage';
 
 // Component to handle admin home redirect
 function AdminHomeRedirect() {
+  const [isChecking, setIsChecking] = React.useState(true);
+  const [isAdmin, setIsAdmin] = React.useState(false);
+
   React.useEffect(() => {
     const userStr = localStorage.getItem('bikeshop_current_user_v1');
     if (userStr) {
       try {
         const user = JSON.parse(userStr);
         if (user.isAdmin) {
-          window.location.href = '/admin/dashboard';
+          setIsAdmin(true);
         }
       } catch (e) {
         // ignore
       }
     }
+    setIsChecking(false);
   }, []);
+
+  if (isChecking) {
+    return null; // or a loading spinner
+  }
+
+  if (isAdmin) {
+    return <Navigate to="/admin/dashboard" replace />;
+  }
+
   return <LandingPage />;
 }
 
@@ -46,6 +60,7 @@ function App() {
         <Route path="/admin/add-product" element={<AdminProductsPage />} />
         <Route path="/admin/orders" element={<AdminOrdersPage />} />
         <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/my-purchase" element={<MyPurchasePage />} />
       </Routes>
     </Router>
   );

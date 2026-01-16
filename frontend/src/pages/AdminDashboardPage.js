@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import NotificationPanel from '../components/NotificationPanel';
 import './AdminDashboardPage.css';
 
 function AdminDashboardPage() {
@@ -133,6 +134,7 @@ function AdminDashboardPage() {
             <button onClick={() => navigate('/admin/orders')}>ORDERS</button>
           </nav>
           <div className="nav-actions">
+            <NotificationPanel userId={1} userType="admin" />
             <div className="user-icon no-click">{userInitial}</div>
             <button className="logout-btn" onClick={handleLogout}>Logout</button>
           </div>

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { addToCart } from '../services/api';
+import NotificationPanel from '../components/NotificationPanel';
 import Toast from '../components/Toast';
 import './ProductsPage.css';
 
@@ -24,6 +25,17 @@ function ProductsPage() {
   const [toastIcon, setToastIcon] = useState(null);
   const [toastType, setToastType] = useState('success');
   const [toastPosition, setToastPosition] = useState('center');
+  const [accountDropdownOpen, setAccountDropdownOpen] = useState(false);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (accountDropdownOpen && !event.target.closest('.account-dropdown')) {
+        setAccountDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [accountDropdownOpen]);
 
   useEffect(() => {
     // Redirect admin users to their dashboard
@@ -154,13 +166,35 @@ function ProductsPage() {
               Edit
             </button>
           ) : (
-            <button 
-              className="add-to-cart-btn"
-              onClick={() => handleAddToCart(product, type)}
-              disabled={product.stock === 0}
-            >
-              {product.stock === 0 ? 'Out of Stock' : 'Add to Cart'}
-            </button>
+            <div className="product-actions">
+              <button 
+                className="add-to-cart-icon-btn"
+                onClick={() => handleAddToCart(product, type)}
+                disabled={product.stock === 0}
+                title={product.stock === 0 ? 'Out of Stock' : 'Add to Cart'}
+              >
+                🛒
+              </button>
+              <button 
+                className="buy-btn"
+                onClick={() => {
+                  const item = {
+                    id: Date.now(),
+                    productId: product.id,
+                    productName: product.name,
+                    productType: type,
+                    price: product.price,
+                    quantity: 1,
+                    imageUrl: product.imageUrl
+                  };
+                  localStorage.setItem('checkout_items', JSON.stringify([item]));
+                  navigate('/checkout');
+                }}
+                disabled={product.stock === 0}
+              >
+                {product.stock === 0 ? 'Out of Stock' : 'Buy'}
+              </button>
+            </div>
           )}
         </div>
       </div>
@@ -251,9 +285,26 @@ function ProductsPage() {
                 {cartCount > 0 && <span className="cart-count">{cartCount}</span>}
               </div>
             )}
-            <button className="account-button" onClick={() => navigate('/profile', { state: { edit: true } })}>
-              <span className="account-text">My Account</span>
-            </button>
+            <NotificationPanel userId={user?.id} userType={isAdmin ? 'admin' : 'user'} />
+            <div className="account-dropdown">
+              <button 
+                className="account-button" 
+                onClick={() => setAccountDropdownOpen(!accountDropdownOpen)}
+              >
+                <span className="account-text">My Account</span>
+                <span className={`caret ${accountDropdownOpen ? 'open' : ''}`}>▾</span>
+              </button>
+              {accountDropdownOpen && (
+                <ul className="account-dropdown-menu">
+                  <li onClick={() => { navigate('/profile', { state: { edit: true } }); setAccountDropdownOpen(false); }}>
+                    Profile
+                  </li>
+                  <li onClick={() => { navigate('/my-purchase'); setAccountDropdownOpen(false); }}>
+                    My Purchase
+                  </li>
+                </ul>
+              )}
+            </div>
             <button className="logout-btn" onClick={handleLogout}>Logout</button>
           </div>
         </div>

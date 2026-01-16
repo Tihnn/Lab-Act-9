@@ -45,6 +45,12 @@ export class Order {
   @Column({ default: 'pending' })
   status: string; // pending, processing, shipped, delivered, cancelled
 
+  @Column({ default: false })
+  cancellationRequested: boolean;
+
+  @Column({ type: 'text', nullable: true })
+  cancellationReason: string;
+
   @Column()
   paymentMethod: string;
 

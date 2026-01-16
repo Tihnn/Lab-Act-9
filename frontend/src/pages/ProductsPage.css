@@ -231,6 +231,7 @@
   border-radius: 8px;
   cursor: pointer;
   font-weight: 700;
+  gap: 5px;
 }
 
 .account-button:hover {
@@ -240,6 +241,51 @@
 .account-text {
   color: #fff;
   font-size: 15px;
+}
+
+.account-dropdown {
+  position: relative;
+}
+
+.account-dropdown .caret {
+  transition: transform 0.3s;
+}
+
+.account-dropdown .caret.open {
+  transform: rotate(180deg);
+}
+
+.account-dropdown-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 0.5rem;
+  background: #2D2D2D;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  list-style: none;
+  padding: 0.5rem 0;
+  min-width: 150px;
+  z-index: 1000;
+}
+
+.account-dropdown-menu li {
+  padding: 0.75rem 1.5rem;
+  cursor: pointer;
+  transition: background 0.2s;
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: 600;
+}
+
+.account-dropdown-menu li:hover {
+  background: rgba(255, 107, 107, 0.1);
+  color: #ff6b6b;
+}
+
+.account-dropdown-menu li.active {
+  background: rgba(255, 107, 107, 0.15);
+  color: #ff6b6b;
 }
 
 /* Main Content */
@@ -386,6 +432,58 @@
 }
 
 .add-to-cart-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.add-to-cart-icon-btn {
+  background: #fed700;
+  color: white;
+  border: none;
+  padding: 10px;
+  border-radius: 50%;
+  font-size: 20px;
+  width: 45px;
+  height: 45px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s;
+  box-shadow: 0 2px 8px rgba(254, 215, 0, 0.3);
+}
+
+.add-to-cart-icon-btn:hover:not(:disabled) {
+  background: #e6c200;
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(254, 215, 0, 0.4);
+}
+
+.add-to-cart-icon-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  opacity: 0.6;
+  box-shadow: none;
+}
+
+.buy-btn {
+  background: #ff6b6b;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.buy-btn:hover:not(:disabled) {
+  background: #ff5252;
+  transform: scale(1.05);
+}
+
+.buy-btn:disabled {
   background: #ccc;
   cursor: not-allowed;
 }

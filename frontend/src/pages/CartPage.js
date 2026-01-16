@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getCart, updateCartItem, removeFromCart } from '../services/api';
+import NotificationPanel from '../components/NotificationPanel';
 import './CartPage.css';
 import Toast from '../components/Toast';
 
@@ -14,6 +15,17 @@ function CartPage() {
   const [toastSubtitle, setToastSubtitle] = useState('');
   const [toastIcon, setToastIcon] = useState(null);
   const [toastType, setToastType] = useState('success');
+  const [accountDropdownOpen, setAccountDropdownOpen] = useState(false);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (accountDropdownOpen && !event.target.closest('.account-dropdown')) {
+        setAccountDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [accountDropdownOpen]);
 
   useEffect(() => {
     loadCart();
@@ -153,15 +165,32 @@ function CartPage() {
           <nav className="nav-links">
             <button onClick={() => navigate('/home')}>HOME</button>
             <button onClick={() => navigate('/products')}>CONTINUE SHOPPING</button>
-            <div className="cart-nav-button">
-              <button onClick={() => navigate('/cart')}>CART</button>
-              {cartCount > 0 && <span className="cart-badge">{cartCount}</span>}
-            </div>
           </nav>
           <div className="nav-actions">
-            <button className="account-button" onClick={() => navigate('/profile', { state: { edit: true } })}>
-              <span className="account-text">My Account</span>
-            </button>
+            <div className="cart-icon" onClick={() => navigate('/cart')}>
+              🛒
+              {cartCount > 0 && <span className="cart-count">{cartCount}</span>}
+            </div>
+            <NotificationPanel userId={user?.id} userType="user" />
+            <div className="account-dropdown">
+              <button 
+                className="account-button" 
+                onClick={() => setAccountDropdownOpen(!accountDropdownOpen)}
+              >
+                <span className="account-text">My Account</span>
+                <span className={`caret ${accountDropdownOpen ? 'open' : ''}`}>▾</span>
+              </button>
+              {accountDropdownOpen && (
+                <ul className="account-dropdown-menu">
+                  <li onClick={() => { navigate('/profile', { state: { edit: true } }); setAccountDropdownOpen(false); }}>
+                    Profile
+                  </li>
+                  <li onClick={() => { navigate('/my-purchase'); setAccountDropdownOpen(false); }}>
+                    My Purchase
+                  </li>
+                </ul>
+              )}
+            </div>
             <button className="logout-btn" onClick={handleLogout}>Logout</button>
           </div>
         </div>

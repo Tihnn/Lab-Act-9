@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import NotificationPanel from '../components/NotificationPanel';
 import './LandingPage.css';
 
 function LandingPage() {
@@ -8,6 +9,17 @@ function LandingPage() {
   const [cartCount, setCartCount] = useState(0);
   const [categoryOpen, setCategoryOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [accountDropdownOpen, setAccountDropdownOpen] = useState(false);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (accountDropdownOpen && !event.target.closest('.account-dropdown')) {
+        setAccountDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [accountDropdownOpen]);
 
   useEffect(() => {
     updateCartCount();
@@ -115,9 +127,26 @@ function LandingPage() {
                     {cartCount > 0 && <span className="cart-count">{cartCount}</span>}
                   </div>
                 )}
-                <button className="account-button" onClick={() => navigate('/profile', { state: { edit: true } })}>
-                  <span className="account-text">My Account</span>
-                </button>
+                <NotificationPanel userId={user?.id} userType={isAdmin ? 'admin' : 'user'} />
+                <div className="account-dropdown">
+                  <button 
+                    className="account-button" 
+                    onClick={() => setAccountDropdownOpen(!accountDropdownOpen)}
+                  >
+                    <span className="account-text">My Account</span>
+                    <span className={`caret ${accountDropdownOpen ? 'open' : ''}`}>▾</span>
+                  </button>
+                  {accountDropdownOpen && (
+                    <ul className="account-dropdown-menu">
+                      <li onClick={() => { navigate('/profile', { state: { edit: true } }); setAccountDropdownOpen(false); }}>
+                        Profile
+                      </li>
+                      <li onClick={() => { navigate('/my-purchase'); setAccountDropdownOpen(false); }}>
+                        My Purchase
+                      </li>
+                    </ul>
+                  )}
+                </div>
                 <button className="logout-btn" onClick={handleLogout}>Logout</button>
               </>
             ) : (

@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import NotificationPanel from '../components/NotificationPanel';
 import './AdminOrdersPage.css';
 
 function AdminOrdersPage() {
   const navigate = useNavigate();
   const [orders, setOrders] = useState([]);
+  const [filteredOrders, setFilteredOrders] = useState([]);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const [receivedFilter, setReceivedFilter] = useState('all');
 
   useEffect(() => {
     // Check if user is admin
@@ -37,10 +40,33 @@ function AdminOrdersPage() {
       // Sort by most recent first
       const sorted = allOrders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
       setOrders(sorted);
+      applyFilter(sorted, receivedFilter);
     } catch (error) {
       console.error('Error loading orders:', error);
       setOrders([]);
+      setFilteredOrders([]);
     }
+  };
+
+  const applyFilter = (ordersList, filter) => {
+    if (filter === 'received') {
+      setFilteredOrders(ordersList.filter(order => order.status === 'delivered'));
+    } else if (filter === 'not-received') {
+      setFilteredOrders(ordersList.filter(order => order.status === 'ship'));
+    } else if (filter === 'cancellation-requests') {
+      setFilteredOrders(ordersList.filter(order => order.cancellationRequested === true));
+    } else if (filter === 'cancelled') {
+      setFilteredOrders(ordersList.filter(order => order.status === 'cancelled'));
+    } else {
+      // Show only pending orders in 'all' view
+      setFilteredOrders(ordersList.filter(order => order.status === 'pending'));
+    }
+  };
+
+  const handleFilterChange = (e) => {
+    const filter = e.target.value;
+    setReceivedFilter(filter);
+    applyFilter(orders, filter);
   };
 
   const handleLogout = () => {
@@ -121,6 +147,21 @@ function AdminOrdersPage() {
     }
   };
 
+  const handleConfirmCancellation = async (orderId) => {
+    if (!window.confirm('Are you sure you want to confirm this cancellation request?')) {
+      return;
+    }
+    try {
+      await axios.put(`http://localhost:3001/api/orders/${orderId}/confirm-cancellation`);
+      // Reload orders after confirmation
+      await loadOrders();
+      alert('Cancellation confirmed successfully');
+    } catch (error) {
+      console.error('Error confirming cancellation:', error);
+      alert('Failed to confirm cancellation');
+    }
+  };
+
   return (
     <div className="admin-orders-page">
       {/* Navigation */}
@@ -130,11 +171,13 @@ function AdminOrdersPage() {
             PedalHub <span style={{ color: '#ff6b6b' }}>/ Admin</span>
           </div>
           <nav className="nav-links">
+            <button onClick={() => navigate('/home')}>HOME</button>
             <button onClick={() => navigate('/admin/dashboard')}>DASHBOARD</button>
             <button onClick={() => navigate('/admin/products')}>MY PRODUCTS</button>
             <button className="active" onClick={() => navigate('/admin/orders')}>ORDERS</button>
           </nav>
           <div className="nav-actions">
+            <NotificationPanel userId={1} userType="admin" />
             <div className="user-icon no-click">{userInitial}</div>
             <button className="logout-btn" onClick={handleLogout}>Logout</button>
           </div>
@@ -143,7 +186,59 @@ function AdminOrdersPage() {
 
       {/* Main Content */}
       <main className="orders-container">
-        <h1 className="orders-title">All Orders</h1>
+        <h1 className="orders-title">Orders Management</h1>
+
+        {/* Tabs Section */}
+        <div className="tabs-container">
+          <button 
+            className={`tab ${receivedFilter === 'all' ? 'active' : ''}`}
+            onClick={() => {
+              setReceivedFilter('all');
+              applyFilter(orders, 'all');
+            }}
+          >
+            Pending Orders
+          </button>
+          <button 
+            className={`tab ${receivedFilter === 'received' ? 'active' : ''}`}
+            onClick={() => {
+              setReceivedFilter('received');
+              applyFilter(orders, 'received');
+            }}
+          >
+            Item Received
+          </button>
+          <button 
+            className={`tab ${receivedFilter === 'not-received' ? 'active' : ''}`}
+            onClick={() => {
+              setReceivedFilter('not-received');
+              applyFilter(orders, 'not-received');
+            }}
+          >
+            Not Received
+          </button>
+          <button 
+            className={`tab ${receivedFilter === 'cancellation-requests' ? 'active' : ''}`}
+            onClick={() => {
+              setReceivedFilter('cancellation-requests');
+              applyFilter(orders, 'cancellation-requests');
+            }}
+          >
+            Cancellation Requests
+            {orders.filter(o => o.cancellationRequested).length > 0 && (
+              <span className="tab-badge">{orders.filter(o => o.cancellationRequested).length}</span>
+            )}
+          </button>
+          <button 
+            className={`tab ${receivedFilter === 'cancelled' ? 'active' : ''}`}
+            onClick={() => {
+              setReceivedFilter('cancelled');
+              applyFilter(orders, 'cancelled');
+            }}
+          >
+            Cancelled Orders
+          </button>
+        </div>
 
         {/* Orders Table */}
         <div className="orders-card">
@@ -165,12 +260,18 @@ function AdminOrdersPage() {
                     <th>Phone</th>
                     <th>Date</th>
                     <th>Total Amount</th>
-                    <th>Status</th>
+                    {receivedFilter === 'cancellation-requests' ? (
+                      <th>Cancellation Reason</th>
+                    ) : receivedFilter === 'cancelled' ? (
+                      <th>Cancellation Reason</th>
+                    ) : (
+                      <th>Status</th>
+                    )}
                     <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {orders.map(order => (
+                  {filteredOrders.map(order => (
                     <tr key={order.id}>
                       <td className="order-id">#{order.id}</td>
                       <td>{order.customerName}</td>
@@ -179,25 +280,49 @@ function AdminOrdersPage() {
                       <td>{formatDate(order.createdAt)}</td>
                       <td className="amount">₱{(parseFloat(order.totalAmount) || 0).toFixed(2)}</td>
                       <td>
-                        <select 
-                          className={`status-select status-${order.status || 'pending'}`}
-                          value={order.status || 'pending'}
-                          onChange={(e) => handleStatusChange(order.id, e.target.value)}
-                        >
-                          <option value="pending">Pending</option>
-                          <option value="processing">Processing</option>
-                          <option value="shipped">Shipped</option>
-                          <option value="delivered">Delivered</option>
-                          <option value="cancelled">Cancelled</option>
-                        </select>
+                        {receivedFilter === 'received' ? (
+                          <span className="status-text status-delivered">Received</span>
+                        ) : receivedFilter === 'not-received' ? (
+                          <span className="status-text status-shipped">Ship</span>
+                        ) : receivedFilter === 'cancellation-requests' ? (
+                          <span className="cancellation-reason">{order.cancellationReason || 'No reason provided'}</span>
+                        ) : receivedFilter === 'cancelled' ? (
+                          <span className="cancellation-reason">{order.cancellationReason || 'No reason provided'}</span>
+                        ) : order.status === 'cancelled' ? (
+                          <span className="status-text status-cancelled">Cancelled</span>
+                        ) : order.status === 'delivered' ? (
+                          <span className="status-text status-delivered">Delivered</span>
+                        ) : (
+                          <select 
+                            className={`status-select status-${order.status || 'pending'}`}
+                            value={order.status || 'pending'}
+                            onChange={(e) => handleStatusChange(order.id, e.target.value)}
+                            disabled={order.status === 'ship'}
+                          >
+                            <option value="pending">Pending</option>
+                            <option value="ship">Ship</option>
+                          </select>
+                        )}
                       </td>
                       <td>
-                        <button className="btn-view" onClick={() => handleViewOrder(order)}>
-                          View Details
-                        </button>
-                        <button className="btn-delete" onClick={() => handleDeleteOrder(order.id)}>
-                          Delete
-                        </button>
+                        {receivedFilter === 'cancellation-requests' ? (
+                          <button className="btn-confirm" onClick={() => handleConfirmCancellation(order.id)}>
+                            Confirm Cancellation
+                          </button>
+                        ) : receivedFilter === 'cancelled' ? (
+                          <button className="btn-view" onClick={() => handleViewOrder(order)}>
+                            View Details
+                          </button>
+                        ) : (
+                          <>
+                            <button className="btn-view" onClick={() => handleViewOrder(order)}>
+                              View Details
+                            </button>
+                            <button className="btn-delete" onClick={() => handleDeleteOrder(order.id)}>
+                              Delete
+                            </button>
+                          </>
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -229,11 +354,10 @@ function AdminOrdersPage() {
                     className={`status-select status-${selectedOrder.status || 'pending'}`}
                     value={selectedOrder.status || 'pending'}
                     onChange={(e) => handleStatusChange(selectedOrder.id, e.target.value)}
+                    disabled={selectedOrder.status === 'ship' || selectedOrder.status === 'cancelled'}
                   >
                     <option value="pending">Pending</option>
-                    <option value="processing">Processing</option>
-                    <option value="shipped">Shipped</option>
-                    <option value="delivered">Delivered</option>
+                    <option value="ship">Ship</option>
                     <option value="cancelled">Cancelled</option>
                   </select>
                 </div>

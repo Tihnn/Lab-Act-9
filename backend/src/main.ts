@@ -30,16 +30,25 @@ async function bootstrap() {
   // Swagger API documentation
   const swaggerConfig = new DocumentBuilder()
     .setTitle('PedalHub API')
-    .setDescription('LABACT 9 API documentation')
+    .setDescription('LABACT 9 - Bike Shop E-Commerce API Documentation\n\nComplete REST API for managing products, orders, cart, users, and notifications.')
     .setVersion('1.0.0')
-    .addServer('http://localhost:3001')
+    .addTag('Products', 'Product management endpoints (Bicycles, Parts, Accessories, Clothing)')
+    .addTag('Cart', 'Shopping cart operations')
+    .addTag('Orders', 'Order management and tracking')
+    .addTag('Users', 'User authentication and profile management')
+    .addTag('Status', 'Notification system')
+    .addServer('http://localhost:3001', 'Development Server')
     .build();
   const swaggerDocument = SwaggerModule.createDocument(app, swaggerConfig);
-  SwaggerModule.setup('api-docs', app, swaggerDocument);
+  SwaggerModule.setup('api-docs', app, swaggerDocument, {
+    customSiteTitle: 'PedalHub API Docs',
+    customfavIcon: 'https://nestjs.com/img/logo-small.svg',
+    customCss: '.swagger-ui .topbar { display: none }',
+  });
   
   const port = process.env.PORT || 3001;
   await app.listen(port);
   console.log(`🚀 Backend server is running on http://localhost:${port}`);
-  console.log(`📚 Swagger docs available at http://localhost:${port}/api-docs`);
+  console.log(`📚 Swagger API Documentation: http://localhost:${port}/api-docs`);
 }
 bootstrap();
