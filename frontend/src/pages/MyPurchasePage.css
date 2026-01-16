@@ -362,6 +362,37 @@
   align-items: center;
 }
 
+.order-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.order-actions .btn-view-details {
+  flex: 1;
+  background: #2196F3;
+}
+
+.order-actions .btn-view-details:hover {
+  background: #1976D2;
+}
+
+.order-actions .btn-reorder {
+  flex: 1;
+  background: #ff6b6b;
+  border: none;
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.3s;
+}
+
+.order-actions .btn-reorder:hover {
+  background: #ff5252;
+}
+
 .status-badge {
   padding: 0.5rem 1rem;
   border-radius: 20px;

@@ -350,20 +350,30 @@ function AdminOrdersPage() {
                 </div>
                 <div className="info-row">
                   <span className="label">Status:</span>
-                  <select 
-                    className={`status-select status-${selectedOrder.status || 'pending'}`}
-                    value={selectedOrder.status || 'pending'}
-                    onChange={(e) => handleStatusChange(selectedOrder.id, e.target.value)}
-                    disabled={selectedOrder.status === 'ship' || selectedOrder.status === 'cancelled'}
-                  >
-                    <option value="pending">Pending</option>
-                    <option value="ship">Ship</option>
-                    <option value="cancelled">Cancelled</option>
-                  </select>
+                  {receivedFilter === 'received' ? (
+                    <span className="status-text status-delivered">Received</span>
+                  ) : receivedFilter === 'not-received' ? (
+                    <span className="status-text status-shipped">Not Received</span>
+                  ) : (
+                    <select 
+                      className={`status-select status-${selectedOrder.status || 'pending'}`}
+                      value={selectedOrder.status || 'pending'}
+                      onChange={(e) => handleStatusChange(selectedOrder.id, e.target.value)}
+                      disabled={selectedOrder.status === 'ship' || selectedOrder.status === 'cancelled'}
+                    >
+                      <option value="pending">Pending</option>
+                      <option value="ship">Ship</option>
+                      <option value="cancelled">Cancelled</option>
+                    </select>
+                  )}
                 </div>
                 <div className="info-row">
                   <span className="label">Date:</span>
                   <span className="value">{formatDate(selectedOrder.createdAt)}</span>
+                </div>
+                <div className="info-row">
+                  <span className="label">Payment Method:</span>
+                  <span className="value">{selectedOrder.paymentMethod || 'Cash on Delivery'}</span>
                 </div>
               </div>
 

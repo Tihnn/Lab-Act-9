@@ -382,7 +382,7 @@ function CheckoutPage() {
                   <div key={item.id} className="order-item">
                     <div className="order-item-info">
                       <h4>{item.productName}</h4>
-                      <p>₱{parseFloat(item.price).toFixed(2)} × {item.quantity}</p>
+                      <p>Qty: {item.quantity}</p>
                     </div>
                     <div className="order-item-price">
                       ₱{(parseFloat(item.price) * item.quantity).toFixed(2)}

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getCart, updateCartItem, removeFromCart } from '../services/api';
+import { getCart, updateCartItem, removeFromCart, clearCart } from '../services/api';
 import NotificationPanel from '../components/NotificationPanel';
 import './CartPage.css';
 import Toast from '../components/Toast';
@@ -74,6 +74,30 @@ function CartPage() {
       setToastType('error');
       setToastIcon('error');
       setToastTitle('Failed to remove item');
+      setToastSubtitle('Please try again');
+    }
+  };
+
+  const handleDeleteAllCart = async () => {
+    if (cartItems.length === 0) return;
+    
+    if (!window.confirm('Are you sure you want to delete all items from your cart?')) {
+      return;
+    }
+
+    try {
+      await clearCart();
+      loadCart();
+      setSelectedItems([]);
+      setToastType('success');
+      setToastIcon('check');
+      setToastTitle('Cart cleared');
+      setToastSubtitle('All items have been removed from your cart');
+    } catch (error) {
+      console.error('Error clearing cart:', error);
+      setToastType('error');
+      setToastIcon('error');
+      setToastTitle('Failed to clear cart');
       setToastSubtitle('Please try again');
     }
   };
@@ -221,6 +245,13 @@ function CartPage() {
                 <label htmlFor="select-all" className="select-all-label">
                   Select All ({selectedItems.length} of {cartItems.length} selected)
                 </label>
+                <button 
+                  className="delete-all-btn" 
+                  onClick={handleDeleteAllCart}
+                  disabled={selectedItems.length !== cartItems.length || cartItems.length === 0}
+                >
+                  Delete All
+                </button>
               </div>
               {cartItems.map(item => {
                 const productName = item.productName || 'Unknown Product';

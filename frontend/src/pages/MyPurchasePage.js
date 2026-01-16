@@ -141,6 +141,7 @@ function MyPurchasePage() {
   const getStatusBadge = (status) => {
     const statusConfig = {
       pending: { label: 'Pending', className: 'status-pending' },
+      ship: { label: 'To Ship', className: 'status-shipped' },
       processing: { label: 'Processing', className: 'status-processing' },
       shipped: { label: 'Shipped', className: 'status-shipped' },
       delivered: { label: 'Delivered', className: 'status-delivered' },
@@ -340,22 +341,27 @@ function MyPurchasePage() {
                       {selectedTab !== 'to-ship' && selectedTab !== 'pending' && !(selectedTab === 'all' && order.status === 'ship') && getStatusBadge(order.status)}
                       <div className="order-total">₱{(parseFloat(order.totalAmount) || 0).toFixed(2)}</div>
                     </div>
-                    {order.status === 'cancelled' && (
-                      <button className="btn-view-details" onClick={() => {
-                        localStorage.setItem('checkout_items', JSON.stringify(order.items.map(item => ({
-                          id: item.id || Date.now(),
-                          productId: item.productId,
-                          productName: item.productName,
-                          productType: item.productType,
-                          price: item.price,
-                          quantity: item.quantity,
-                          imageUrl: item.imageUrl
-                        }))));
-                        navigate('/checkout');
-                      }}>
-                        Reorder
+                    <div className="order-actions">
+                      <button className="btn-view-details" onClick={() => handleViewOrder(order)}>
+                        View Details
                       </button>
-                    )}
+                      {order.status === 'cancelled' && (
+                        <button className="btn-reorder" onClick={() => {
+                          localStorage.setItem('checkout_items', JSON.stringify(order.items.map(item => ({
+                            id: item.id || Date.now(),
+                            productId: item.productId,
+                            productName: item.productName,
+                            productType: item.productType,
+                            price: item.price,
+                            quantity: item.quantity,
+                            imageUrl: item.imageUrl
+                          }))));
+                          navigate('/checkout');
+                        }}>
+                          Reorder
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -424,9 +430,8 @@ function MyPurchasePage() {
                       <div className="item-details">
                         <span className="item-name">{item.productName}</span>
                         <span className="item-qty">Qty: {item.quantity}</span>
-                        <span className="item-price">₱{(item.price || 0).toFixed(2)} each</span>
+                        <span className="item-price">₱{parseFloat(item.price || 0).toFixed(2)} each</span>
                       </div>
-                      <span className="item-total">₱{((item.price || 0) * (item.quantity || 0)).toFixed(2)}</span>
                     </div>
                   ))}
                 </div>
